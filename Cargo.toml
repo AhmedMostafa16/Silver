@@ -1,0 +1,17 @@
+[package]
+name = "silver"
+version = "0.1.0"
+authors = ["AhmedMostafa16 <amk67482@gmail.com>"]
+keywords = ["web-framework", "http", "efficiency, fast, silver"]
+
+[dependencies]
+bytes = "0.4"
+futures = "0.1"
+httparse = "1.1"
+log = "0.3"
+net2 = "0.2"
+time = "0.1"
+tokio-core = "0.1"
+tokio-io = "0.1"
+tokio-proto = "0.1"
+tokio-service = "0.1"
