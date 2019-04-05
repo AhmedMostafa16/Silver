@@ -3,6 +3,8 @@ name = "silver"
 version = "0.1.0"
 authors = ["AhmedMostafa16 <amk67482@gmail.com>"]
 keywords = ["web-framework", "http", "efficiency"]
+description = "Fast http web framework for Rust"
+license = "GNU GPLv3"
 
 [dependencies]
 bytes = "0.4"
