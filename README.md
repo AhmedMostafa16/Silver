@@ -8,7 +8,7 @@ The goal of this project is, to show how fast Rust can be. It isn't made for hug
 Add the following to your `Cargo.toml`:
 ```toml
 [dependencies]
-silver = 0.1.1
+silver = 0.1
 ```
 
 ## Features
