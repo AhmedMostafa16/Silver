@@ -7,14 +7,16 @@ extern crate tokio_core;
 extern crate tokio_io;
 extern crate tokio_proto;
 extern crate tokio_service;
+extern crate tokio_codec;
 
 use std::io;
 
 use bytes::BytesMut;
 use futures::future;
+use tokio_io::codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
-use tokio_io::codec::{Decoder, Encoder, Framed};
 use tokio_proto::pipeline::ServerProto;
+use tokio_codec::{Encoder, Decoder};
 pub use tokio_proto::TcpServer as Server;
 pub use tokio_service::Service as Handler;
 

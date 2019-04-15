@@ -58,11 +58,17 @@ fn push(buf: &mut BytesMut, data: &[u8]) {
 pub fn encode(msg: Response, buf: &mut BytesMut) {
     let length = msg.response.len();
 
-    write!(FastWrite(buf), "\
-        HTTP/1.1 {}\r\n\
-        Server: Example\r\n\
-        Content-Length: {}\r\n\
-    ", msg.status_message, length).unwrap();
+    write!(
+        FastWrite(buf),
+        "\
+         HTTP/1.1 {}\r\n\
+         Server: Example\r\n\
+         Content-Length: {}\r\n\
+         ",
+        msg.status_message,
+        length
+    )
+    .unwrap();
 
     for &(ref k, ref v) in &msg.headers {
         push(buf, k.as_bytes());
@@ -93,4 +99,3 @@ impl fmt::Display for StatusMessage {
         }
     }
 }
-
