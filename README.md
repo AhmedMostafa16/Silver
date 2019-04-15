@@ -13,7 +13,7 @@ silver = 0.1
 
 ## Features
 ### Speed
-- It is wrapping **x3** times faster than Tron which is based on hyper.
+- It is wrapping **x3** times faster than Iron which is based on hyper.
 - It can do about `~908k` requests per second.
 
 ### Syntax

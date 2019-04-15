@@ -1,21 +1,30 @@
 extern crate silver;
 
+use silver::{Http, Handler, Request, Response, Server, SilverResult};
 use std::io;
-
-use silver::{Handler, Http, Request, Response, Server, SilverResult};
 
 struct HelloWorld;
 
 impl Handler for HelloWorld {
+    type Future = SilverResult;
     type Request = Request;
     type Response = Response;
     type Error = io::Error;
-    type Future = SilverResult;
 
-    fn call(&self, _: Request) -> SilverResult {
+    fn call(&self, req: Request) -> SilverResult {
         let mut resp = Response::new();
 
-        resp.body("Hello World!");
+        match (req.method(), req.path()) {
+            ("GET", "") => {
+                resp.body("Hello, World!");
+            },
+            ("GET", "/bye") => {
+                resp.body("Bye, World!");
+            },
+            _ => {
+                resp.body("Not Found").status(404, "Not Found");
+            }
+        }
 
         resp.ok()
     }
