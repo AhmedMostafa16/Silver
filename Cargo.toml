@@ -4,7 +4,12 @@ version = "0.1.0"
 authors = ["AhmedMostafa16 <amk67482@gmail.com>"]
 keywords = ["web-framework", "http", "efficiency"]
 description = "Fast http web framework for Rust"
+categories = ["network-programming", "web-programming"]
+exclude = [".gitignore", "examples/*"]
+readme = "Readme.md"
 license = "MIT"
+hompage = "https://github.com/AhmedMostafa16/Silver"
+repository = "https://github.com/AhmedMostafa16/Silver"
 
 [dependencies]
 bytes = "0.4"
