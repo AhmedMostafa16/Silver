@@ -5,15 +5,15 @@ use futures::future;
 
 use SilverResult;
 
-enum StatusMessage {
-    Ok,
-    Custom(u32, String),
-}
-
 pub struct Response {
     headers: Vec<(String, String)>,
     response: String,
     status_message: StatusMessage,
+}
+
+enum StatusMessage {
+    Ok,
+    Custom(u32, String),
 }
 
 impl Response {
@@ -45,17 +45,7 @@ impl Response {
     }
 }
 
-struct FastWrite<'a>(&'a mut BytesMut);
-
-fn push(buf: &mut BytesMut, data: &[u8]) {
-    buf.reserve(data.len());
-    unsafe {
-        buf.bytes_mut()[..data.len()].copy_from_slice(data);
-        buf.advance_mut(data.len());
-    }
-}
-
-pub fn encode(msg: Response, buf: &mut BytesMut) {
+pub fn encode(msg: &Response, buf: &mut BytesMut) {
     let length = msg.response.len();
 
     write!(
@@ -72,20 +62,31 @@ pub fn encode(msg: Response, buf: &mut BytesMut) {
 
     for &(ref k, ref v) in &msg.headers {
         push(buf, k.as_bytes());
-        push(buf, ": ".as_bytes());
+        push(buf, &[58, 32]); // ": "
         push(buf, v.as_bytes());
-        push(buf, "\r\n".as_bytes());
+        push(buf, &[13, 10]); // "\r\n"
     }
 
-    push(buf, "\r\n".as_bytes());
+    push(buf, &[13, 10]);
     push(buf, msg.response.as_bytes());
 }
+
+fn push(buf: &mut BytesMut, data: &[u8]) {
+    buf.reserve(data.len());
+    unsafe {
+        buf.bytes_mut()[..data.len()].copy_from_slice(data);
+        buf.advance_mut(data.len());
+    }
+}
+
+struct FastWrite<'a>(&'a mut BytesMut);
 
 impl<'a> fmt::Write for FastWrite<'a> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         push(&mut *self.0, s.as_bytes());
         Ok(())
     }
+
     fn write_fmt(&mut self, args: fmt::Arguments) -> fmt::Result {
         fmt::write(self, args)
     }

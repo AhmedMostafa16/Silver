@@ -1,9 +1,8 @@
 use std::{fmt, io, slice, str};
 
 use bytes::BytesMut;
-use httparse;
 
-type Slice = (usize, usize);
+use httparse;
 
 pub struct Request {
     method: Slice,
@@ -12,6 +11,8 @@ pub struct Request {
     headers: Vec<(Slice, Slice)>,
     data: BytesMut,
 }
+
+type Slice = (usize, usize);
 
 pub struct RequestHeaders<'req> {
     headers: slice::Iter<'req, (Slice, Slice)>,
@@ -23,16 +24,12 @@ impl Request {
         str::from_utf8(self.slice(&self.method)).unwrap()
     }
 
-    pub fn version(&self) -> u8 {
-        self.version
-    }
-
     pub fn path(&self) -> &str {
         str::from_utf8(self.slice(&self.path)).unwrap()
     }
 
-    pub fn slice(&self, slice: &Slice) -> &[u8] {
-        &self.data[slice.0..slice.1]
+    pub fn version(&self) -> u8 {
+        self.version
     }
 
     pub fn headers(&self) -> RequestHeaders {
@@ -40,6 +37,10 @@ impl Request {
             headers: self.headers.iter(),
             req: self,
         }
+    }
+
+    fn slice(&self, slice: &Slice) -> &[u8] {
+        &self.data[slice.0..slice.1]
     }
 }
 
@@ -53,10 +54,10 @@ pub fn decode(buf: &mut BytesMut) -> io::Result<Option<Request>> {
     let (method, path, version, headers, amt) = {
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut r = httparse::Request::new(&mut headers);
-        let status = r.parse(buf).map_err(|e| {
+        let status = try!(r.parse(buf).map_err(|e| {
             let msg = format!("failed to parse http request: {:?}", e);
             io::Error::new(io::ErrorKind::Other, msg)
-        })?;
+        }));
 
         let amt = match status {
             httparse::Status::Complete(amt) => amt,
@@ -68,6 +69,7 @@ pub fn decode(buf: &mut BytesMut) -> io::Result<Option<Request>> {
             assert!(start < buf.len());
             (start, start + a.len())
         };
+
         (
             toslice(r.method.unwrap().as_bytes()),
             toslice(r.path.unwrap().as_bytes()),
