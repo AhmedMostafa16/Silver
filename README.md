@@ -8,7 +8,7 @@ The goal of this project is, to show how fast Rust can be. It isn't made for hug
 Add the following to your `Cargo.toml`:
 ```toml
 [dependencies]
-silver = 0.1
+silver-rs = 0.1
 ```
 
 ## Features
@@ -28,10 +28,10 @@ $ cargo run --example hello-world --release
 ```
 
 ```rust
-extern crate silver;
+extern crate silver_rs;
 
 use std::io;
-use silver::{Server, Http, Handler, SilverResult, Request, Response};
+use silver_rs::{Server, Http, Handler, SilverResult, Request, Response};
 
 struct HelloWorld;
 

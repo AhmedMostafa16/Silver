@@ -1,5 +1,5 @@
 [package]
-name = "silver"
+name = "silver-rs"
 version = "0.1.0"
 authors = ["AhmedMostafa16 <amk67482@gmail.com>"]
 keywords = ["web-framework", "http", "efficiency"]
