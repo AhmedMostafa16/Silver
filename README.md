@@ -14,12 +14,56 @@ silver-rs = 0.1
 ## Features
 ### Speed
 - It is wrapping **x3** times faster than Iron which is based on hyper.
-- It can do about `~908k` requests per second.
+
+#### Benchmark
+> The benchmark used the following code.
+
+Technical details about the server:
+
+    - CPU: Intel Xeon E5620.
+    - RAM: 16GB , 1333MHZ.
+
+**Silver**
+```
+Running 10s test @ http://127.0.0.1:8080
+  16 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.39ms    1.65ms  25.83ms   87.67%
+    Req/Sec    13.50k     1.65k   31.66k    74.41%
+  Latency Distribution
+     50%    1.84ms
+     75%    2.59ms
+     90%    4.45ms
+     99%    9.06ms
+  2159962 requests in 10.10s, 140.07MB read
+Requests/sec: 213852.16
+Transfer/sec:     13.87MB
+
+```
+
+**Iron**
+```
+Running 10s test @ http://localhost:3000
+  16 threads and 500 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.01ms    2.88ms  91.44ms   69.64%
+    Req/Sec     3.17k     1.32k    7.47k    60.45%
+  Latency Distribution
+     50%    4.59ms
+     75%    6.51ms
+     90%    8.72ms
+     99%   13.36ms
+  253942 requests in 10.10s, 27.61MB read
+Requests/sec:  25151.17
+Transfer/sec:      2.73MB
+
+```
 
 ### Syntax
 Silver has a flexible and easy syntax compared to Iron.
 
 - Silver
+
 This example can be run, by:
 
 ```
