@@ -2,7 +2,7 @@ extern crate silver_rs;
 
 use std::io;
 
-use silver_rs::{Handler, Http, Request, Response, Server, SilverResult};
+use silver_rs::prelude::*;
 
 struct HelloWorld;
 

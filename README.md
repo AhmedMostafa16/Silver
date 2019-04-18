@@ -75,7 +75,7 @@ $ cargo run --example hello-world --release
 extern crate silver_rs;
 
 use std::io;
-use silver_rs::{Server, Http, Handler, SilverResult, Request, Response};
+use silver_rs::prelude::*;
 
 struct HelloWorld;
 

@@ -1,6 +1,6 @@
 extern crate silver_rs;
 
-use silver_rs::{Http, Handler, Request, Response, Server, SilverResult};
+use silver_rs::prelude::*;
 use std::io;
 
 struct HelloWorld;
@@ -15,14 +15,14 @@ impl Handler for HelloWorld {
         let mut resp = Response::new();
 
         match (req.method(), req.path()) {
-            ("GET", "") => {
+            ("GET", "/") => {
                 resp.body("Hello, World!");
             },
             ("GET", "/bye") => {
                 resp.body("Bye, World!");
             },
             _ => {
-                resp.body("Not Found").status(404, "Not Found");
+                resp.body("Not Found").status(404);
             }
         }
 

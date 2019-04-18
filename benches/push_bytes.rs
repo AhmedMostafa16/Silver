@@ -5,7 +5,7 @@ extern crate test;
 mod tests {
     use bytes::{BufMut, BytesMut};
     use std::fmt::{self, Write};
-    
+
     use test::Bencher;
 
     #[bench]
@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[bench]
-    fn becnh_conver_push(b: &mut Bencher) {
+    fn bench_convert_and_push(b: &mut Bencher) {
         let mut buffer = BytesMut::new();
 
         b.iter(|| {
@@ -49,6 +49,7 @@ mod tests {
             let mut data: [u8; 4] = [0; 4];
 
             for i in 1..5 {
+                let base = (10 * i) as u16;
                 data[4 - 1] = (48 + (length % (10 * i) as u16)) as u8;
                 length = &length / (10 * i) as u16;
             }
