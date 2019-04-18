@@ -25,19 +25,19 @@ Technical details about the server:
 
 **Silver**
 ```
-Running 10s test @ http://127.0.0.1:8080
+Running 10s test @ http://0.0.0.0:8080
   16 threads and 500 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.39ms    1.65ms  25.83ms   87.67%
-    Req/Sec    13.50k     1.65k   31.66k    74.41%
+    Latency     2.31ms    1.69ms  27.61ms   86.60%
+    Req/Sec    14.02k     2.37k   24.76k    70.50%
   Latency Distribution
-     50%    1.84ms
-     75%    2.59ms
-     90%    4.45ms
-     99%    9.06ms
-  2159962 requests in 10.10s, 140.07MB read
-Requests/sec: 213852.16
-Transfer/sec:     13.87MB
+     50%    1.76ms
+     75%    2.63ms
+     90%    4.55ms
+     99%    8.46ms
+  2241258 requests in 10.06s, 109.01MB read
+Requests/sec: 222811.75
+Transfer/sec:     10.84MB
 
 ```
 

@@ -5,7 +5,7 @@ extern crate test;
 mod tests {
     use bytes::{BufMut, BytesMut};
     use std::fmt::{self, Write};
-    use std::mem::transmute;
+    
     use test::Bencher;
 
     #[bench]
@@ -45,8 +45,8 @@ mod tests {
         let mut buffer = BytesMut::new();
 
         b.iter(|| {
-            let length = "HTTP/1.1 200 Ok".len() as u16;
-            let data: [u8; 4] = [0; 4];
+            let mut length = "HTTP/1.1 200 Ok".len() as u16;
+            let mut data: [u8; 4] = [0; 4];
 
             for i in 1..5 {
                 data[4 - 1] = (48 + (length % (10 * i) as u16)) as u8;

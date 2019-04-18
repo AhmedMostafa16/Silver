@@ -6,7 +6,13 @@ extern crate tokio_io;
 extern crate tokio_proto;
 extern crate tokio_service;
 
+mod request;
+mod response;
+
 use std::io;
+
+pub use request::Request;
+pub use response::Response;
 
 use bytes::BytesMut;
 use futures::future;
@@ -14,14 +20,9 @@ use tokio_codec::{Decoder, Encoder};
 use tokio_io::codec::Framed;
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_proto::pipeline::ServerProto;
+
 pub use tokio_proto::TcpServer as Server;
 pub use tokio_service::Service as Handler;
-
-pub use request::Request;
-pub use response::Response;
-
-mod request;
-mod response;
 
 pub type SilverResult = future::Ok<Response, io::Error>;
 
