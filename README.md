@@ -4,6 +4,9 @@ Fast http framework for `Rust`.
 ## About
 The goal of this project is, to show how fast Rust can be. It isn't made for huge complex applications, just a test project for benchmark reasons.
 
+
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L0TYVL)
+
 ## Usage
 Add the following to your `Cargo.toml`:
 ```toml
