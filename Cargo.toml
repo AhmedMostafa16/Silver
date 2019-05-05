@@ -1,22 +1,18 @@
 [package]
 name = "silver-rs"
-version = "0.1.1"
-authors = ["AhmedMostafa16 <amk67482@gmail.com>"]
-keywords = ["web-framework", "http", "efficiency"]
-description = "Fast http web framework for Rust"
-categories = ["network-programming", "web-programming"]
-exclude = [".gitignore", "examples/*"]
-readme = "README.md"
-license = "MIT"
-hompage = "https://github.com/AhmedMostafa16/Silver"
-repository = "https://github.com/AhmedMostafa16/Silver"
+version = "0.2.0-dev"
+authors = ["Ahmed Mostafa <amk67482@gmail.com>"]
 
 [dependencies]
+hyper = { version = "0.12", features = ["runtime"], default-features = false }
+http = "0.1"
+mime = "0.3"
 bytes = "0.4"
-futures = "0.1"
-httparse = "1.1"
 tokio = "0.1"
-tokio-io = "0.1"
-tokio-proto = "0.1"
-tokio-service = "0.1"
-tokio-codec = "0.1"
+futures = "0.1"
+failure = { version = "0.1", features = ["derive"] }
+log = "*"
+scoped-tls = "*"
+
+[dev-dependencies]
+pretty_env_logger = "*"
