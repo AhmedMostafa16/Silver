@@ -5,20 +5,20 @@ extern crate test;
 mod tests {
     use bytes::{BufMut, BytesMut};
     use std::fmt::{self, Write};
-
     use test::Bencher;
-
-    #[bench]
-    fn bench_push_bstr_to_buffer(b: &mut Bencher) {
-        let mut buffer = BytesMut::new();
-        b.iter(|| push(&mut buffer, b"HTTP/1.1 "));
-    }
 
     #[bench]
     fn bench_push_to_buffer(b: &mut Bencher) {
         let mut buffer = BytesMut::new();
 
         b.iter(|| push(&mut buffer, &[72, 84, 84, 80, 47, 49, 46, 49, 32]));
+    }
+
+    #[bench]
+    fn bench_push_bstr_to_buffer(b: &mut Bencher) {
+        let mut buffer = BytesMut::new();
+
+        b.iter(|| push(&mut buffer, b"HTTP/1.1 "));
     }
 
     #[bench]
@@ -52,25 +52,27 @@ mod tests {
 
         b.iter(|| {
             let mut data: [u8; 4] = [0; 4];
-            let mut length = "HTTP/1.1 200 Ok".len() as u16;
+            let mut length = "HTTP/1.1 200 OK".len() as u16;
 
+            // Convert u16 to ASCII bytes
             for i in 1..5 {
                 let base = (10u16.pow(4 - (i as u32))) as u16;
-                data[i - 1] = (48 + (length / (10 * i) as u16)) as u8;
+                data[i - 1] = 48 + (&length / &base) as u8;
                 length = (&length % &base) as u16;
             }
 
             push(&mut buffer, &data);
-        })
+        });
     }
 
     #[bench]
     fn bench_string_to_push(b: &mut Bencher) {
         let mut buffer = BytesMut::new();
-        let data = String::from("200 Ok");
+        let data = String::from("200 OK");
+
         b.iter(|| {
             push(&mut buffer, data.as_bytes());
-        })
+        });
     }
 
     fn push(buf: &mut BytesMut, data: &[u8]) {

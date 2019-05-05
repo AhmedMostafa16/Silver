@@ -1,7 +1,6 @@
 extern crate bytes;
 extern crate futures;
 extern crate httparse;
-extern crate tokio_codec;
 extern crate tokio_io;
 extern crate tokio_proto;
 extern crate tokio_service;
@@ -16,8 +15,7 @@ pub use response::Response;
 
 use bytes::BytesMut;
 use futures::future;
-use tokio_codec::*;
-use tokio_io::codec::Framed;
+use tokio_io::codec::{Decoder, Encoder, Framed};
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_proto::pipeline::ServerProto;
 

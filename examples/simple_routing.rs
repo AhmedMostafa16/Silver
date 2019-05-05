@@ -17,10 +17,10 @@ impl Handler for HelloWorld {
         match (req.method(), req.path()) {
             ("GET", "/") => {
                 resp.body("Hello, World!");
-            },
+            }
             ("GET", "/bye") => {
                 resp.body("Bye, World!");
-            },
+            }
             _ => {
                 resp.body("Not Found").status(404);
             }
