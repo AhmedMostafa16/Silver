@@ -2,6 +2,8 @@
 name = "silver-rs"
 version = "0.2.0-dev"
 authors = ["Ahmed Mostafa <amk67482@gmail.com>"]
+license = "MIT"
+description = "Fast, safe and asynchrnous web framework"
 
 [dependencies]
 hyper = { version = "0.12", features = ["runtime"], default-features = false }
@@ -9,10 +11,11 @@ http = "0.1"
 mime = "0.3"
 bytes = "0.4"
 tokio = "0.1"
+tokio_io = "0.1"
 futures = "0.1"
 failure = { version = "0.1", features = ["derive"] }
-log = "*"
-scoped-tls = "*"
+log = "0.4"
+scoped-tls = "^1.0"
 
 [dev-dependencies]
-pretty_env_logger = "*"
+pretty_env_logger = "0.3"
