@@ -21,7 +21,7 @@ pub trait ServiceExt<T>: Service + Sized {
     fn upgrade(self, io: T, read_buf: Bytes) -> Self::Upgrade;
 }
 
-pub fn serve<S, I>(new_service: S, incoming: I) -> Result<()>
+pub fn serve<S, I>(new_service: S, incoming: I) -> Result<(), Error>
 where
     S: NewService<ReqBody = Body, ResBody = Body> + Send + Sync + 'static,
     S::Future: Send,
