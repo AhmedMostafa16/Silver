@@ -2,8 +2,9 @@ pub(crate) mod service;
 
 use failure::Error;
 use std::net::SocketAddr;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
+#[cfg(unix)]
+use std::path::{Path, PathBuf};
 
 use router::{self, Route, Router};
 use {rt, transport};
@@ -26,7 +27,7 @@ pub enum TransportConfig {
 impl Default for TransportConfig {
     fn default() -> Self {
         TransportConfig::Tcp {
-            addr: ([127, 0, 0, 1], 4000).into(),
+            addr: ([127, 0, 0, 1], 8080).into(),
         }
     }
 }

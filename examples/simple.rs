@@ -7,7 +7,7 @@ use silver_rs::router::{Route, RouterContext};
 use silver_rs::{App, Context, Error};
 
 fn welcome(_cx: &Context, _rcx: &mut RouterContext) -> Result<&'static str, Error> {
-    Ok("Hello")
+    Ok("Hello World")
 }
 
 fn main() -> silver_rs::app::Result<()> {
