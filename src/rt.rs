@@ -10,8 +10,6 @@ use std::{fmt, mem};
 use tokio;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-pub type Result<T> = ::std::result::Result<T, Error>;
-
 pub trait ServiceExt<T>: Service + Sized {
     type Upgrade: Future<Item = (), Error = ()>;
     type UpgradeError: Into<Error>;

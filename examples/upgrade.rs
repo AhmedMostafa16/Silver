@@ -5,10 +5,10 @@ extern crate pretty_env_logger;
 extern crate silver_rs;
 extern crate tokio_io;
 
-use silver_rs::{App, Context, Error};
 use silver_rs::router::{Route, RouterContext};
 use silver_rs::transport::Io;
 use silver_rs::upgrade::UpgradeContext;
+use silver_rs::{App, Context, Error};
 
 use bytes::Bytes;
 use futures::prelude::*;

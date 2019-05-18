@@ -1,7 +1,7 @@
+use failure;
 use futures::{future, Future};
 use http::StatusCode;
 use std::mem;
-use failure;
 
 use context::Context;
 use error::Error;

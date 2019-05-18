@@ -10,6 +10,9 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 extern crate tokio;
+extern crate tokio_tcp;
+#[cfg(unix)]
+extern crate tokio_uds;
 #[macro_use]
 extern crate scoped_tls;
 
@@ -30,4 +33,4 @@ pub use context::Context;
 pub use error::Error;
 pub use output::{Output, Responder};
 
-pub type Result<T> = ::std::result::Result<T,error::Error>;
+pub type Result<T> = ::std::result::Result<T, error::Error>;
