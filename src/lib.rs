@@ -21,20 +21,28 @@ extern crate rustls;
 extern crate tokio_rustls;
 
 pub mod app;
+pub mod context;
 pub mod error;
-pub mod handler;
 pub mod input;
 pub mod output;
 pub mod router;
 pub mod transport;
 pub mod upgrade;
 
-mod context;
+mod handler;
 mod rt;
 
+#[doc(inline)]
 pub use app::App;
+#[doc(inline)]
 pub use context::Context;
+#[doc(inline)]
 pub use error::Error;
+#[doc(inline)]
+pub use handler::Handler;
+#[doc(inline)]
 pub use output::{Output, Responder};
+#[doc(inline)]
+pub use router::Route;
 
 pub type Result<T> = ::std::result::Result<T, error::Error>;

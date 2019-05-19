@@ -16,7 +16,7 @@ pub trait ServiceExt<T>: Service + Sized {
 
     fn poll_ready_upgrade(&mut self) -> Poll<(), Self::UpgradeError>;
 
-    fn upgrade(self, io: T, read_buf: Bytes) -> Self::Upgrade;
+    fn upgrade(self, io: T, read_buf: Bytes) -> Result<Self::Upgrade, (T, Bytes)>;
 }
 
 pub fn serve<S, I>(new_service: S, incoming: I) -> Result<(), Error>
@@ -40,11 +40,10 @@ where
             new_service
                 .new_service()
                 .map_err(|_e| ())
-                .and_then(move |service| {
-                    tokio::spawn(Connection::Http(protocol.serve_connection(stream, service)))
-                })
+                .and_then(move |service| tokio::spawn(Connection::Http(protocol.serve_connection(stream, service))))
         })
     });
+
     tokio::run(server);
 
     Ok(())
@@ -55,6 +54,7 @@ where
     S: Service<ReqBody = Body, ResBody = Body> + ServiceExt<I>,
 {
     Http(conn::Connection<I, S>),
+    Shutdown(I),
     Upgrading(Parts<I, S>),
     Upgrade(S::Upgrade),
     Done,
@@ -69,6 +69,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Connection::Http(ref conn) => f.debug_tuple("Http").field(conn).finish(),
+            Connection::Shutdown(ref io) => f.debug_tuple("Shutdown").field(io).finish(),
             Connection::Upgrading(ref parts) => f.debug_tuple("Upgrading").field(parts).finish(),
             Connection::Upgrade(ref fut) => f.debug_tuple("Upgrade").field(fut).finish(),
             Connection::Done => f.debug_tuple("Done").finish(),
@@ -109,13 +110,9 @@ where
         loop {
             match *self {
                 Http(ref mut conn) => try_ready!(conn.poll_without_shutdown()),
-                Upgrading(ref mut parts) => try_ready!(parts
-                    .service
-                    .poll_ready_upgrade()
-                    .map_err(Into::<Error>::into)),
-                Upgrade(ref mut fut) => {
-                    try_ready!(fut.poll().map_err(|_| format_err!("during upgrade")))
-                }
+                Shutdown(ref mut io) => try_ready!(io.shutdown().map_err(Into::<Error>::into)),
+                Upgrading(ref mut parts) => try_ready!(parts.service.poll_ready_upgrade().map_err(Into::<Error>::into)),
+                Upgrade(ref mut fut) => try_ready!(fut.poll().map_err(|_| format_err!("during upgrade"))),
                 Done => panic!("Connection has already been resolved or rejected"),
             }
 
@@ -136,16 +133,15 @@ where
                 },
                 Upgrading(parts) => {
                     trace!("construct a future and transit to Upgrade");
-
                     let Parts {
-                        service,
-                        io,
-                        read_buf,
-                        ..
+                        service, io, read_buf, ..
                     } = parts;
-                    *self = Upgrade(service.upgrade(io, read_buf));
+                    match service.upgrade(io, read_buf) {
+                        Ok(fut) => *self = Upgrade(fut),
+                        Err((io, _)) => *self = Shutdown(io),
+                    }
                 }
-                Upgrade(..) => return Ok(().into()),
+                Shutdown(..) | Upgrade(..) => return Ok(().into()),
                 Done => unreachable!(),
             }
         }

@@ -1,4 +1,6 @@
 /// The implementation of route recognizer based on radix tree.
+///
+/// The original implementation is located at https://github.com/ubnt-intrepid/susanoo
 use failure::Error;
 use std::{cmp, mem, str};
 
@@ -292,11 +294,7 @@ impl<T> Builder<T> {
 
     /// Finalize the build process and create an instance of `Recognizer`.
     pub fn finish(&mut self) -> Result<Recognizer<T>, Error> {
-        let Builder {
-            root,
-            values,
-            result,
-        } = mem::replace(self, Recognizer::builder());
+        let Builder { root, values, result } = mem::replace(self, Recognizer::builder());
         result?;
         Ok(Recognizer { root, values })
     }
@@ -489,47 +487,57 @@ mod tests {
 
         #[test]
         fn failcase1() {
-            assert!(Recognizer::<()>::builder()
-                .insert("/foo", ())
-                .insert("/:id", ())
-                .finish()
-                .is_err());
+            assert!(
+                Recognizer::<()>::builder()
+                    .insert("/foo", ())
+                    .insert("/:id", ())
+                    .finish()
+                    .is_err()
+            );
         }
 
         #[test]
         fn failcase2() {
-            assert!(Recognizer::<()>::builder()
-                .insert("/foo/", ())
-                .insert("/foo/*path", ())
-                .finish()
-                .is_err());
+            assert!(
+                Recognizer::<()>::builder()
+                    .insert("/foo/", ())
+                    .insert("/foo/*path", ())
+                    .finish()
+                    .is_err()
+            );
         }
 
         #[test]
         fn failcase3() {
-            assert!(Recognizer::<()>::builder()
-                .insert("/:id", ())
-                .insert("/foo", ())
-                .finish()
-                .is_err());
+            assert!(
+                Recognizer::<()>::builder()
+                    .insert("/:id", ())
+                    .insert("/foo", ())
+                    .finish()
+                    .is_err()
+            );
         }
 
         #[test]
         fn failcase4() {
-            assert!(Recognizer::<()>::builder()
-                .insert("/foo/*path", ())
-                .insert("/foo/", ())
-                .finish()
-                .is_err());
+            assert!(
+                Recognizer::<()>::builder()
+                    .insert("/foo/*path", ())
+                    .insert("/foo/", ())
+                    .finish()
+                    .is_err()
+            );
         }
 
         #[test]
         fn failcase5() {
-            assert!(Recognizer::<()>::builder()
-                .insert("/:id", ())
-                .insert("/:name", ())
-                .finish()
-                .is_err());
+            assert!(
+                Recognizer::<()>::builder()
+                    .insert("/:id", ())
+                    .insert("/:name", ())
+                    .finish()
+                    .is_err()
+            );
         }
     }
 
@@ -538,10 +546,7 @@ mod tests {
 
         #[test]
         fn case1() {
-            let recognizer = Recognizer::<()>::builder()
-                .insert("/", ())
-                .finish()
-                .unwrap();
+            let recognizer = Recognizer::<()>::builder().insert("/", ()).finish().unwrap();
             assert_eq!(recognizer.recognize("/"), Some((&(), vec![])));
         }
 
@@ -559,14 +564,8 @@ mod tests {
 
         #[test]
         fn case3() {
-            let recognizer = Recognizer::<usize>::builder()
-                .insert("/*path", 42)
-                .finish()
-                .unwrap();
-            assert_eq!(
-                recognizer.recognize("/path/to/readme.txt"),
-                Some((&42, vec![(1, 19)]))
-            );
+            let recognizer = Recognizer::<usize>::builder().insert("/*path", 42).finish().unwrap();
+            assert_eq!(recognizer.recognize("/path/to/readme.txt"), Some((&42, vec![(1, 19)])));
         }
     }
 }

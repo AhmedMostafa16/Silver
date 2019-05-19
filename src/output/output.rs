@@ -1,7 +1,8 @@
 use http::Response;
 use hyper::body::Body;
 use std::fmt;
-use upgrade::UpgradeFn;
+
+use upgrade::service::UpgradeFn;
 
 use super::body::ResponseBody;
 
@@ -12,9 +13,7 @@ pub struct Output {
 
 impl fmt::Debug for Output {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Output")
-            .field("response", &self.response)
-            .finish()
+        f.debug_struct("Output").field("response", &self.response).finish()
     }
 }
 

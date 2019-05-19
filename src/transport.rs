@@ -1,13 +1,14 @@
 use bytes::{Buf, BufMut};
+use failure::Error;
 use futures::{Future, Poll, Stream};
 #[cfg(feature = "tls")]
 use rustls::{ServerConfig, ServerSession};
 use std::net::SocketAddr;
 #[cfg(unix)]
-use std::path::Path;
+use std::path::PathBuf;
 #[cfg(feature = "tls")]
 use std::sync::Arc;
-use std::{fmt, io};
+use std::{fmt, io, mem};
 use tokio::io::{AsyncRead, AsyncWrite};
 #[cfg(feature = "tls")]
 use tokio_rustls::{self, Accept, TlsStream};
@@ -15,10 +16,10 @@ use tokio_tcp::{self as tcp, TcpListener, TcpStream};
 #[cfg(unix)]
 use tokio_uds::{self as uds, UnixListener, UnixStream};
 
-// TODO: Refactor
+// TODO: refactor
 
 #[derive(Debug)]
-pub enum MaybeTls<S> {
+enum MaybeTls<S> {
     Raw(S),
     #[cfg(feature = "tls")]
     Tls(TlsStream<S, ServerSession>),
@@ -96,7 +97,7 @@ impl<S: AsyncRead + AsyncWrite> AsyncWrite for MaybeTls<S> {
     }
 }
 
-pub enum MaybeTlsHandshake<S> {
+enum MaybeTlsHandshake<S> {
     Raw(Option<S>),
     #[cfg(feature = "tls")]
     Tls(Accept<S>),
@@ -107,9 +108,18 @@ impl<S: AsyncRead + AsyncWrite> Future for MaybeTlsHandshake<S> {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        unimplemented!()
+        match *self {
+            MaybeTlsHandshake::Raw(ref mut s) => {
+                let stream = s.take().expect("MaybeTlsHandshake has already resolved");
+                Ok(MaybeTls::Raw(stream).into())
+            }
+            #[cfg(feature = "tls")]
+            MaybeTlsHandshake::Tls(ref mut a) => a.poll().map(|a| a.map(|s| MaybeTls::Tls(s))),
+        }
     }
 }
+
+// >>>>> Io <<<<< //
 
 #[derive(Debug)]
 pub struct Io(IoKind);
@@ -185,6 +195,66 @@ impl AsyncWrite for Io {
     }
 }
 
+// >>>>> Incoming <<<<< //
+
+#[derive(Debug)]
+pub enum TransportConfig {
+    Tcp {
+        addr: SocketAddr,
+    },
+    #[cfg(unix)]
+    Uds {
+        path: PathBuf,
+    },
+}
+
+impl Default for TransportConfig {
+    fn default() -> Self {
+        TransportConfig::Tcp {
+            addr: ([127, 0, 0, 1], 8080).into(),
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Builder {
+    config: TransportConfig,
+    #[cfg(feature = "tls")]
+    tls: Option<TlsConfig>,
+}
+
+impl Builder {
+    pub fn set_transport(&mut self, config: TransportConfig) -> &mut Builder {
+        self.config = config;
+        self
+    }
+
+    #[cfg(feature = "tls")]
+    pub fn set_tls(&mut self, config: TlsConfig) -> &mut Builder {
+        self.tls = Some(config);
+        self
+    }
+
+    pub fn finish(&mut self) -> Result<Incoming, Error> {
+        let builder = mem::replace(self, Default::default());
+        let kind = match builder.config {
+            TransportConfig::Tcp { addr } => IncomingKind::Tcp(TcpListener::bind(&addr)?.incoming()),
+            #[cfg(unix)]
+            TransportConfig::Uds { path } => IncomingKind::Uds(UnixListener::bind(path)?.incoming()),
+        };
+        #[cfg(feature = "tls")]
+        let tls = match builder.tls {
+            Some(config) => Some(tls::load_config(&config).map(Arc::new)?),
+            None => None,
+        };
+        Ok(Incoming {
+            kind,
+            #[cfg(feature = "tls")]
+            tls,
+        })
+    }
+}
+
 pub struct Incoming {
     kind: IncomingKind,
     #[cfg(feature = "tls")]
@@ -193,9 +263,7 @@ pub struct Incoming {
 
 impl fmt::Debug for Incoming {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Incoming")
-            .field("kind", &self.kind)
-            .finish()
+        f.debug_struct("Incoming").field("kind", &self.kind).finish()
     }
 }
 
@@ -207,36 +275,8 @@ enum IncomingKind {
 }
 
 impl Incoming {
-    pub fn tcp(addr: &SocketAddr) -> io::Result<Incoming> {
-        Ok(Incoming {
-            kind: IncomingKind::Tcp(TcpListener::bind(addr)?.incoming()),
-            #[cfg(feature = "tls")]
-            tls: None,
-        })
-    }
-
-    #[cfg(unix)]
-    pub fn uds<P>(path: P) -> io::Result<Incoming>
-    where
-        P: AsRef<Path>,
-    {
-        Ok(Incoming {
-            kind: IncomingKind::Uds(UnixListener::bind(path)?.incoming()),
-            #[cfg(feature = "tls")]
-            tls: None,
-        })
-    }
-
-    #[cfg(feature = "tls")]
-    pub fn with_tls(
-        mut self,
-        config: &TlsConfig,
-        suite: &'static rustls::SupportedCipherSuite,
-        client_auth: tls::ClientAuth,
-    ) -> Result<Incoming, ::failure::Error> {
-        let config = tls::load_config(config, suite, client_auth)?;
-        self.tls = Some(Arc::new(config));
-        Ok(self)
+    pub fn builder() -> Builder {
+        Default::default()
     }
 }
 
@@ -268,33 +308,26 @@ impl Stream for Incoming {
 fn poll_raw(kind: &mut IncomingKind) -> Poll<Option<Handshake>, io::Error> {
     match *kind {
         IncomingKind::Tcp(ref mut i) => i.poll().map(|i| {
-            i.map(|stream| {
-                stream.map(|stream| Handshake::Tcp(MaybeTlsHandshake::Raw(Some(stream))))
-            })
+            i.map(|stream| stream.map(|stream| Handshake(HandshakeKind::Tcp(MaybeTlsHandshake::Raw(Some(stream))))))
         }),
 
         #[cfg(unix)]
         IncomingKind::Uds(ref mut i) => i.poll().map(|i| {
-            i.map(|stream| {
-                stream.map(|stream| Handshake::Uds(MaybeTlsHandshake::Raw(Some(stream))))
-            })
+            i.map(|stream| stream.map(|stream| Handshake(HandshakeKind::Uds(MaybeTlsHandshake::Raw(Some(stream))))))
         }),
     }
 }
 
 #[cfg(feature = "tls")]
-fn poll_tls(
-    kind: &mut IncomingKind,
-    config: &Arc<ServerConfig>,
-) -> Poll<Option<Handshake>, io::Error> {
+fn poll_tls(kind: &mut IncomingKind, config: &Arc<ServerConfig>) -> Poll<Option<Handshake>, io::Error> {
     let session = ServerSession::new(config);
     match *kind {
         IncomingKind::Tcp(ref mut i) => i.poll().map(|i| {
             i.map(|stream| {
                 stream.map(|stream| {
-                    Handshake::Tcp(MaybeTlsHandshake::Tls(
+                    Handshake(HandshakeKind::Tcp(MaybeTlsHandshake::Tls(
                         tokio_rustls::TlsAcceptor::accept_with_session(stream, session),
-                    ))
+                    )))
                 })
             })
         }),
@@ -303,19 +336,34 @@ fn poll_tls(
         IncomingKind::Uds(ref mut i) => i.poll().map(|i| {
             i.map(|stream| {
                 stream.map(|stream| {
-                    Handshake::Uds(MaybeTlsHandshake::Tls(
+                    Handshake(HandshakeKind::Uds(MaybeTlsHandshake::Tls(
                         tokio_rustls::TlsAcceptor::accept_with_session(stream, session),
-                    ))
+                    )))
                 })
             })
         }),
     }
 }
 
-pub enum Handshake {
+// =====
+
+#[derive(Debug)]
+pub struct Handshake(HandshakeKind);
+
+enum HandshakeKind {
     Tcp(MaybeTlsHandshake<TcpStream>),
     #[cfg(unix)]
     Uds(MaybeTlsHandshake<UnixStream>),
+}
+
+impl fmt::Debug for HandshakeKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            HandshakeKind::Tcp(..) => f.debug_tuple("Tcp").finish(),
+            #[cfg(unix)]
+            HandshakeKind::Uds(..) => f.debug_tuple("Uds").finish(),
+        }
+    }
 }
 
 impl Future for Handshake {
@@ -323,10 +371,10 @@ impl Future for Handshake {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        match *self {
-            Handshake::Tcp(ref mut h) => h.poll().map(|a| a.map(|io| Io(IoKind::Tcp(io)))),
+        match self.0 {
+            HandshakeKind::Tcp(ref mut h) => h.poll().map(|a| a.map(|io| Io(IoKind::Tcp(io)))),
             #[cfg(unix)]
-            Handshake::Uds(ref mut h) => h.poll().map(|a| a.map(|io| Io(IoKind::Uds(io)))),
+            HandshakeKind::Uds(ref mut h) => h.poll().map(|a| a.map(|io| Io(IoKind::Uds(io)))),
         }
     }
 }
@@ -337,50 +385,13 @@ pub use self::tls::TlsConfig;
 #[cfg(feature = "tls")]
 mod tls {
     use failure::Error;
-    use rustls::internal::msgs::enums::SignatureAlgorithm;
     use rustls::internal::pemfile;
-    use rustls::{AllowAnyAuthenticatedClient, NoClientAuth, RootCertStore};
     use rustls::{Certificate, PrivateKey};
     use std::path::PathBuf;
     use std::{fs, io};
 
     pub use rustls::{ServerConfig, ServerSession};
     pub use tokio_rustls::{Accept, TlsStream};
-
-    #[derive(PartialEq, Clone, Copy)]
-    pub enum ClientAuth {
-        No,
-        Yes,
-    }
-    #[derive(PartialEq, Clone, Copy)]
-    enum KeyType {
-        RSA,
-        ECDSA,
-    }
-
-    impl KeyType {
-        fn for_suite(suite: &'static rustls::SupportedCipherSuite) -> KeyType {
-            if suite.sign == SignatureAlgorithm::ECDSA {
-                KeyType::ECDSA
-            } else {
-                KeyType::RSA
-            }
-        }
-
-        fn path_for(&self, part: &str) -> String {
-            match self {
-                KeyType::RSA => format!("test-ca/rsa/{}", part),
-                KeyType::ECDSA => format!("test-ca/ecdsa/{}", part),
-            }
-        }
-
-        fn get_chain(&self) -> Vec<rustls::Certificate> {
-            pemfile::certs(&mut io::BufReader::new(
-                fs::File::open(self.path_for("end.fullchain")).unwrap(),
-            ))
-            .unwrap()
-        }
-    }
 
     #[derive(Debug)]
     pub struct TlsConfig {
@@ -389,28 +400,12 @@ mod tls {
         pub alpn_protocols: Vec<Vec<u8>>,
     }
 
-    pub fn load_config(
-        config: &TlsConfig,
-        suite: &'static rustls::SupportedCipherSuite,
-        client_auth: ClientAuth,
-    ) -> Result<ServerConfig, Error> {
+    pub fn load_config(config: &TlsConfig) -> Result<ServerConfig, Error> {
         let certs = load_certs(&config.certs_path)?;
         let key = load_key(&config.key_path)?;
-        let kt = KeyType::for_suite(suite);
-        let client_auth = match client_auth {
-            ClientAuth::Yes => {
-                let roots = kt.get_chain();
-                let mut client_auth_roots = RootCertStore::empty();
-                for root in roots {
-                    client_auth_roots.add(&root).unwrap();
-                }
-                AllowAnyAuthenticatedClient::new(client_auth_roots)
-            }
-            ClientAuth::No => NoClientAuth::new(),
-        };
 
-        let mut cfg = ServerConfig::new(client_auth);
-        //cfg.set_single_cert(certs, key);
+        let mut cfg = ServerConfig::new(rustls::NoClientAuth::new());
+        cfg.set_single_cert(certs, key);
         cfg.set_protocols(&config.alpn_protocols[..]);
 
         Ok(cfg)
@@ -419,16 +414,14 @@ mod tls {
     fn load_certs(path: &PathBuf) -> Result<Vec<Certificate>, Error> {
         let certfile = fs::File::open(path)?;
         let mut reader = io::BufReader::new(certfile);
-        let certs =
-            pemfile::certs(&mut reader).map_err(|_| format_err!("failed to read certificates"))?;
+        let certs = pemfile::certs(&mut reader).map_err(|_| format_err!("failed to read certificates"))?;
         Ok(certs)
     }
 
     fn load_key(path: &PathBuf) -> Result<PrivateKey, Error> {
         let keyfile = fs::File::open(path)?;
         let mut reader = io::BufReader::new(keyfile);
-        let keys = pemfile::pkcs8_private_keys(&mut reader)
-            .map_err(|_| format_err!("failed to read private key"))?;
+        let keys = pemfile::pkcs8_private_keys(&mut reader).map_err(|_| format_err!("failed to read private key"))?;
         if keys.is_empty() {
             bail!("empty private key");
         }

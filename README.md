@@ -30,23 +30,21 @@ silver-rs = "0.2.0-dev"
 **Silver**
 
 ```rust
+extern crate silver_rs;
 extern crate http;
 extern crate pretty_env_logger;
-extern crate silver_rs;
 
+use silver_rs::{App, Context, Error, Route};
 use http::Method;
-use silver_rs::router::{Route, RouterContext};
-use silver_rs::{App, Context, Error};
 
-fn welcome(_cx: &Context, _rcx: &mut RouterContext) -> Result<&'static str, Error> {
-    Ok("Hello World!")
+fn welcome(_cx: &Context) -> Result<&'static str, Error> {
+    Ok("Hello")
 }
 
 fn main() -> silver_rs::app::Result<()> {
     pretty_env_logger::init();
     App::builder()
         .mount(vec![Route::new("/", Method::GET, welcome)])
-        .finish()?
         .serve()
         // address is 127.0.0.1:8080
         // it will be changable soon.
@@ -73,7 +71,7 @@ fn main() {
 
 ## Performance
 The benchmark results have been computed with this command: 
-```wrk -t16 -c500 -d10s http://127.0.0.1:4000 --latency```
+```wrk -t16 -c500 -d10s http://127.0.0.1:8080 --latency```
 
 **Silver**
 
@@ -81,16 +79,16 @@ The benchmark results have been computed with this command:
 Running 10s test @ http://127.0.0.1:8080
   16 threads and 500 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.40ms    3.67ms 230.59ms   96.92%
-    Req/Sec    13.66k     2.16k   35.14k    87.82%
+    Latency     2.35ms    1.63ms  48.13ms   80.40%
+    Req/Sec    13.12k     1.26k   32.13k    80.26%
   Latency Distribution
-     50%    2.07ms
-     75%    2.88ms
-     90%    3.98ms
-     99%    9.06ms
-  2046797 requests in 10.09s, 249.85MB read
-Requests/sec: 202791.97
-Transfer/sec:     24.75MB
+     50%    2.06ms
+     75%    2.85ms
+     90%    4.05ms
+     99%    8.25ms
+  2093569 requests in 10.09s, 241.59MB read
+Requests/sec: 207403.80
+Transfer/sec:     23.93MB
 ```
 
 **Iron**
