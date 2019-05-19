@@ -9,6 +9,7 @@ Silver is a next generation Web framework for Rust.
 
 - Ultra-fast.
 - Thread-safety.
+- Feature-rich.
 - Scalability.
 - Built-in router.
 - Asynchronous.
@@ -17,14 +18,17 @@ Silver is a next generation Web framework for Rust.
     and more...
 
 
+#
 ## Usage
 
 Add the following to your Cargo.toml:
 
+```toml
 [dependencies]
 silver-rs = "0.2.0-dev"
+```
 
-
+#
 ## Syntax
 
 **Silver**
@@ -38,7 +42,7 @@ use silver_rs::{App, Context, Error, Route};
 use http::Method;
 
 fn welcome(_cx: &Context) -> Result<&'static str, Error> {
-    Ok("Hello")
+    Ok("Hello World!")
 }
 
 fn main() -> silver_rs::app::Result<()> {
@@ -69,6 +73,7 @@ fn main() {
 }
 ```
 
+#
 ## Performance
 The benchmark results have been computed with this command: 
 ```wrk -t16 -c500 -d10s http://127.0.0.1:8080 --latency```
@@ -109,8 +114,7 @@ Requests/sec: 151658.40
 Transfer/sec:     16.49MB
 ```
 
-
-
+#
 ### License
 
 Silver-rs is licensed under [MIT license](LICENSE-MIT).
