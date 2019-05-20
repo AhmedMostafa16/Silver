@@ -100,24 +100,28 @@ impl Future for AppServiceFuture {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let in_flight = &mut self.in_flight;
         match {
-            let cx = self.context
+            let cx = self
+                .context
                 .as_ref()
                 .expect("AppServiceFuture has already resolved/rejected");
             cx.set(|| in_flight.poll())
         } {
             Ok(Async::Ready(out)) => {
-                let (response, upgrade) = out.deconstruct();
-                if let Some(upgrade) = upgrade {
+                let (response, handler) = out.deconstruct();
+                if let Some(handler) = handler {
                     debug_assert_eq!(response.status(), StatusCode::SWITCHING_PROTOCOLS);
-                    let cx = self.context
+                    let cx = self
+                        .context
                         .take()
                         .expect("AppServiceFuture has already resolved/rejected");
-                    self.tx.send((upgrade, cx));
+                    self.tx.send(handler, cx.request.map(|bd| drop(bd)));
                 }
                 Ok(Async::Ready(response))
             }
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(e) => e.into_response().map(|res| res.map(ResponseBody::into_hyp).into()),
+            Err(e) => e
+                .into_response()
+                .map(|res| res.map(ResponseBody::into_hyp).into()),
         }
     }
 }
