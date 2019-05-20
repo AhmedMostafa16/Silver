@@ -1,4 +1,4 @@
-use http::{Request, StatusCode, header};
+use http::{header, Request, StatusCode};
 use hyperx::header::Header;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -34,13 +34,16 @@ impl Context {
     where
         H: Header,
     {
-        self.request.headers().get(H::header_name()).map_or_else(|| Ok(None), |h| {
-            H::parse_header(&h.as_bytes().into())
-                .map(Some)
-                .map_err(|e| Error::new(e, StatusCode::BAD_REQUEST))
-        })
+        self.request.headers().get(H::header_name()).map_or_else(
+            || Ok(None),
+            |h| {
+                H::parse_header(&h.as_bytes().into())
+                    .map(Some)
+                    .map_err(|e| Error::new(e, StatusCode::BAD_REQUEST))
+            },
+        )
     }
-    
+
     pub fn route(&self) -> Option<&Route> {
         match self.route {
             RouterState::Matched(i, ..) => self.router.get_route(i),
