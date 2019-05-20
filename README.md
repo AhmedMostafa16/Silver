@@ -48,7 +48,7 @@ fn welcome(_cx: &Context) -> Result<&'static str, Error> {
 fn main() -> silver_rs::app::Result<()> {
     pretty_env_logger::init();
     App::builder()
-        .mount(vec![Route::new("/", Method::GET, welcome)])
+        .mount("/", vec![Route::new("/", Method::GET, welcome)])
         .serve()
         // address is 127.0.0.1:8080
         // it will be changable soon.
