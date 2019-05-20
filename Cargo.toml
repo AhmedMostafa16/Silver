@@ -19,6 +19,8 @@ scoped-tls = "^1.0"
 rustls = { version = "0.15", optional = true }
 tokio-rustls = { version = "0.9", optional = true }
 fnv = "1.0"
+hyperx = "0.13"
+tokio-codec = "0.1"
 
 [target.'cfg(unix)'.dependencies]
 tokio-uds = "0.2"
