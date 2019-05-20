@@ -1,23 +1,50 @@
 use bytes::{Buf, Bytes, BytesMut};
 use futures::{Future, Poll, Stream};
 use http::header::HeaderMap;
-use hyper::body::{self, Body, Payload};
+use hyper::body::{self, Body, Payload as _Payload};
+use std::cell::RefCell;
 use std::mem;
 use std::ops::Deref;
 
 use error::CritError;
 
+// >>>>> RequestBody <<<<< //
+
 #[derive(Debug)]
-pub struct RequestBody(Body);
+pub struct RequestBody(RefCell<Option<Body>>);
 
 impl RequestBody {
     pub(crate) fn from_hyp(body: Body) -> RequestBody {
-        RequestBody(body)
+        RequestBody(RefCell::new(Some(body)))
     }
 
     pub(crate) fn into_hyp(self) -> Body {
-        self.0
+        self.0.borrow_mut().take().unwrap_or_default()
     }
+
+    pub fn is_gone(&self)-> bool{
+        self.0.borrow().is_none()
+    }
+
+    pub fn payload(&self)->Option<Payload>{
+        self.0.borrow_mut().take().map(Payload)
+    }
+
+    pub fn read_all(&self)-> ReadAll{
+        let body = self.0.borrow_mut().take();
+        ReadAll{
+            state:ReadAllState::Init(body),
+        }
+    }
+}
+
+// >>>>> Payload <<<<< //
+
+#[derive(Debug)]
+#[must_use = "features do nothing unless pooled"]
+pub struct Payload(Body);
+
+impl Payload {
 
     pub fn poll_data(&mut self) -> Poll<Option<Chunk>, CritError> {
         self.0
@@ -38,14 +65,9 @@ impl RequestBody {
         self.0.content_length()
     }
 
-    pub fn read_all(self) -> ReadAll {
-        ReadAll {
-            state: ReadAllState::Init(self.0),
-        }
-    }
 }
 
-impl Payload for RequestBody {
+impl body::Payload for Payload {
     type Data = Chunk;
     type Error = CritError;
 
@@ -70,59 +92,13 @@ impl Payload for RequestBody {
     }
 }
 
-impl Stream for RequestBody {
+impl Stream for Payload {
     type Item = Chunk;
     type Error = CritError;
 
     #[inline]
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.poll_data()
-    }
-}
-
-// >>>>> ReadAll <<<<< //
-
-#[derive(Debug)]
-pub struct ReadAll {
-    state: ReadAllState,
-}
-
-#[derive(Debug)]
-enum ReadAllState {
-    Init(Body),
-    Receiving(Body, BytesMut),
-    Done,
-}
-
-impl Future for ReadAll {
-    type Item = Bytes;
-    type Error = CritError;
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        use self::ReadAllState::*;
-        loop {
-            match self.state {
-                Init(..) => {}
-                Receiving(ref mut body, ref mut buf) => {
-                    while let Some(chunk) = try_ready!(body.poll_data()) {
-                        buf.extend_from_slice(&*chunk);
-                    }
-                }
-                Done => panic!("cannot resolve twice"),
-            }
-
-            match mem::replace(&mut self.state, Done) {
-                Init(body) => {
-                    self.state = Receiving(body, BytesMut::new());
-                    continue;
-                }
-                Receiving(body, buf) => {
-                    debug_assert!(body.is_end_stream());
-                    return Ok(buf.freeze().into());
-                }
-                Done => unreachable!(),
-            }
-        }
     }
 }
 
@@ -171,5 +147,53 @@ impl Buf for Chunk {
 
     fn advance(&mut self, cnt: usize) {
         self.0.advance(cnt)
+    }
+}
+
+
+// >>>>> ReadAll <<<<< //
+#[derive(Debug)]
+#[must_use = "futures do nothing unless polled"]
+pub struct ReadAll {
+    state: ReadAllState,
+}
+
+#[derive(Debug)]
+enum ReadAllState {
+    Init(Option<Body>),
+    Receiving(Body, BytesMut),
+    Done,
+}
+
+impl Future for ReadAll {
+    type Item = Bytes;
+    type Error = CritError;
+
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        use self::ReadAllState::*;
+        loop {
+            match self.state {
+                Init(..) => {}
+                Receiving(ref mut body, ref mut buf) => {
+                    while let Some(chunk) = try_ready!(body.poll_data()) {
+                        buf.extend_from_slice(&*chunk);
+                    }
+                }
+                Done => panic!("cannot resolve twice"),
+            }
+
+            match mem::replace(&mut self.state, Done) {
+                Init(body) => {
+                    let body = body.ok_or_else(|| format_err!("").compat())?;
+                    self.state = Receiving(body, BytesMut::new());
+                    continue;
+                }
+                Receiving(body, buf) => {
+                    debug_assert!(body.is_end_stream());
+                    return Ok(buf.freeze().into());
+                }
+                Done => unreachable!(),
+            }
+        }
     }
 }
