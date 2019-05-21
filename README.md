@@ -4,6 +4,9 @@ Silver is a next generation Web framework for Rust.
 
 > **This project is now actively development.**
 
+[![Build Status](https://travis-ci.org/AhmedMostafa16/Silver.svg?branch=master)](https://travis-ci.org/AhmedMostafa16/Silver)
+[![Coverage Status](https://coveralls.io/repos/github/AhmedMostafa16/Silver/badge.svg?branch=master)](https://coveralls.io/github/AhmedMostafa16/Silver?branch=master)
+
 ## Features
 
 - Ultra-fast.
