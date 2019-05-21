@@ -39,8 +39,7 @@ matrix:
         - rustup component add rustfmt-preview
       script:
         - cargo clean
-        - cargo test
-        - cargo test --no-default-features
+        - cargo test -j6
       after_success:
         - rustfmt src/* --write-mode=diff -f
 
@@ -49,13 +48,11 @@ matrix:
         - rustup component add rustfmt-preview
       script:
         - cargo clean
-        - cargo test
-        - cargo test --no-default-features
+        - cargo test -j6
       after_success:
         - rustfmt src/* --write-mode=diff -f
 
     - rust: stable
-      env: DEPLOY_DOC
       script:
         - cargo clean
         - cargo doc --no-deps
