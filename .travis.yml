@@ -28,7 +28,6 @@ matrix:
       script:
         - cargo clean
         - cargo test
-        - cargo test --no-default-features
       after_success:
         - rustfmt src/* --write-mode=diff -f
         - bash <(curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh)
