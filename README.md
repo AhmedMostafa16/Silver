@@ -34,12 +34,12 @@ silver-rs = "0.2.0-dev"
 **Silver**
 
 ```rust
-extern crate silver_rs;
 extern crate http;
 extern crate pretty_env_logger;
+extern crate silver_rs;
 
-use silver_rs::{App, Context, Error, Route};
 use http::Method;
+use silver_rs::{App, Context, Error, Route};
 
 fn welcome(_cx: &Context) -> Result<&'static str, Error> {
     Ok("Hello World!")
@@ -47,9 +47,12 @@ fn welcome(_cx: &Context) -> Result<&'static str, Error> {
 
 fn main() -> silver_rs::app::Result<()> {
     pretty_env_logger::init();
-    App::builder()
+    let app = App::builder()
         .mount("/", vec![Route::new("/", Method::GET, welcome)])
-        .serve()
+        .finish()?;
+
+    silver_rs::server::run(app)?;
+    Ok(())
         // address is 127.0.0.1:8080
         // it will be changable soon.
 }

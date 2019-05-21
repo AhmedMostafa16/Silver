@@ -11,16 +11,12 @@ use error::{CritError, Error};
 use input::RequestBody;
 use output::{Output, ResponseBody};
 use router::{Router, RouterState};
-use server::{Io,ServiceUpgradeExt};
+use server::{Io, ServiceUpgradeExt};
 use upgrade::service as upgrade;
 
 use super::App;
 
-pub struct NewAppService {
-    pub(super) app: App,
-}
-
-impl NewService for NewAppService {
+impl NewService for App {
     type ReqBody = Body;
     type ResBody = Body;
     type Error = CritError;
@@ -30,7 +26,7 @@ impl NewService for NewAppService {
 
     fn new_service(&self) -> Self::Future {
         future::ok(AppService {
-            router: self.app.router.clone(),
+            router: self.router.clone(),
             rx: upgrade::new(),
         })
     }

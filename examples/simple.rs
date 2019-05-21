@@ -6,12 +6,16 @@ use http::Method;
 use silver_rs::{App, Context, Error, Route};
 
 fn welcome(_cx: &Context) -> Result<&'static str, Error> {
-    Ok("Hello")
+    Ok("Hello World!")
 }
 
 fn main() -> silver_rs::app::Result<()> {
     pretty_env_logger::init();
-    App::builder()
+    let app = App::builder()
         .mount("/", vec![Route::new("/", Method::GET, welcome)])
-        .serve()
+        .finish()?;
+
+    silver_rs::server::run(app)?;
+    Ok(())
+
 }
