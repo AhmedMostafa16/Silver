@@ -19,8 +19,8 @@ where
     type Future = future::AndThen<R::Future, Result<Output, Error>, fn(T) -> Result<Output, Error>>;
 
     fn handle(&self, cx: &Context) -> Self::Future {
-        (*self)(cx)
-            .into_future()
-            .and_then(|x| Context::with(|cx| x.respond_to(cx)))
+        (*self)(cx).into_future().and_then(|x| {
+            Context::with(|cx| x.respond_to(cx))
+        })
     }
 }

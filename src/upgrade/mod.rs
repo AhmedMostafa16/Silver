@@ -35,7 +35,9 @@ impl Responder for Upgrade {
         if request.version() != Version::HTTP_11 {
             // FIXME: choose appropriate status code
             return Err(Error::new(
-                format_err!("Protocol upgrade is available only on HTTP/1.1"),
+                format_err!(
+                    "Protocol upgrade is available only on HTTP/1.1"
+                ),
                 StatusCode::BAD_REQUEST,
             ));
         }

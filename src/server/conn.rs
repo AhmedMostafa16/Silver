@@ -22,7 +22,9 @@ where
 
 impl<I, S> fmt::Debug for Connection<I, S>
 where
-    S: Service<ReqBody = Body, ResBody = Body> + ServiceUpgradeExt<I> + fmt::Debug,
+    S: Service<ReqBody = Body, ResBody = Body>
+        + ServiceUpgradeExt<I>
+        + fmt::Debug,
     I: AsyncRead + AsyncWrite + fmt::Debug,
     S::Upgrade: fmt::Debug,
 {
@@ -40,7 +42,9 @@ where
 impl<I, S> Future for Connection<I, S>
 where
     I: AsyncRead + AsyncWrite + 'static,
-    S: Service<ReqBody = Body, ResBody = Body> + ServiceUpgradeExt<I> + 'static,
+    S: Service<ReqBody = Body, ResBody = Body>
+        + ServiceUpgradeExt<I>
+        + 'static,
     S::Future: Send,
 {
     type Item = ();

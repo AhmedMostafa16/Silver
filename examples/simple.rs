@@ -9,13 +9,11 @@ fn welcome(_cx: &Context) -> Result<&'static str, Error> {
     Ok("Hello World!")
 }
 
-fn main() -> silver_rs::app::Result<()> {
+fn main() -> silver_rs::AppResult<()> {
     pretty_env_logger::init();
     let app = App::builder()
         .mount("/", vec![Route::new("/", Method::GET, welcome)])
         .finish()?;
 
-    silver_rs::server::run(app)?;
-    Ok(())
-
+    silver_rs::run(app)
 }

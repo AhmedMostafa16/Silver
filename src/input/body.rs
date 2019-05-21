@@ -14,7 +14,6 @@ use error::CritError;
 ///
 /// NOTE: This type has the internal mutability in order to extract the instance of raw message body
 /// without a mutable borrow.
-
 #[derive(Debug)]
 pub struct RequestBody(UnsafeCell<Option<Body>>);
 
@@ -23,22 +22,22 @@ impl RequestBody {
         RequestBody(UnsafeCell::new(Some(body)))
     }
 
-    fn take_body(&self)->Option<Body>{
+    fn take_body(&self) -> Option<Body> {
         // safty: this type does not shared between threads and the following
         // mutable reference is used only this block.
-        unsafe{
+        unsafe {
             let body = &mut *self.0.get();
             body.take()
         }
     }
 
     /// Takes away the instance of raw message body if exists.
-    pub fn forget(&self){
+    pub fn forget(&self) {
         self.take_body().map(mem::drop);
     }
 
     /// Returns 'true' if the instance of raw message body has already taken away.
-    pub fn is_gone(&self)-> bool{
+    pub fn is_gone(&self) -> bool {
         // safety: this type does not shared between threads and the following
         // shared reference is used only this block.
         unsafe {
@@ -48,15 +47,13 @@ impl RequestBody {
     }
 
     /// Creates an instance of "Payload" from the raw message body.
-    pub fn payload(&self)->Option<Payload>{
+    pub fn payload(&self) -> Option<Payload> {
         self.take_body().map(Payload)
     }
 
     /// Creates an instance of "ReadAll" from the raw message body.
-    pub fn read_all(&self)-> ReadAll{
-        ReadAll{
-            state:ReadAllState::Init(self.take_body()),
-        }
+    pub fn read_all(&self) -> ReadAll {
+        ReadAll { state: ReadAllState::Init(self.take_body()) }
     }
 }
 
@@ -68,7 +65,6 @@ impl RequestBody {
 pub struct Payload(Body);
 
 impl Payload {
-
     pub fn poll_data(&mut self) -> Poll<Option<Chunk>, CritError> {
         self.0
             .poll_data()
@@ -87,7 +83,6 @@ impl Payload {
     pub fn content_length(&self) -> Option<u64> {
         self.0.content_length()
     }
-
 }
 
 impl body::Payload for Payload {
@@ -137,13 +132,13 @@ impl Chunk {
     }
 
     /// Converts itself into a `Byte`.
-    pub fn into_bytes(self) ->Bytes{
+    pub fn into_bytes(self) -> Bytes {
         self.0.into_bytes()
     }
 }
 
-impl Into<Bytes> for Chunk{
-    fn into(self)->Bytes{
+impl Into<Bytes> for Chunk {
+    fn into(self) -> Bytes {
         self.into_bytes()
     }
 }

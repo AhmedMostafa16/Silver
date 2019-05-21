@@ -32,9 +32,7 @@ impl Error {
     where
         E: Into<failure::Error>,
     {
-        Error {
-            kind: ErrorKind::Failed(err.into(), status),
-        }
+        Error { kind: ErrorKind::Failed(err.into(), status) }
     }
 
     /// Constructs a *critical* error from a value.
@@ -45,9 +43,7 @@ impl Error {
     where
         E: StdError + Send + Sync + 'static,
     {
-        Error {
-            kind: ErrorKind::Crit(Box::new(err)),
-        }
+        Error { kind: ErrorKind::Crit(Box::new(err)) }
     }
 
     /// Returns `true` if this error is a *critical* error.
@@ -64,16 +60,18 @@ impl Error {
     /// immediately returns an `Err`.
     pub fn into_response(self) -> Result<Response<ResponseBody>, CritError> {
         match self.kind {
-            ErrorKind::Failed(e, status) => Response::builder()
-                .status(status)
-                .header(header::CONNECTION, "close")
-                .header(header::CACHE_CONTROL, "no-cache")
-                .body(e.to_string().into())
-                .map_err(|e| {
-                    format_err!("failed to construct an HTTP error response: {}", e)
-                        .compat()
-                        .into()
-                }),
+            ErrorKind::Failed(e, status) => {
+                Response::builder()
+                    .status(status)
+                    .header(header::CONNECTION, "close")
+                    .header(header::CACHE_CONTROL, "no-cache")
+                    .body(e.to_string().into())
+                    .map_err(|e| {
+                        format_err!("failed to construct an HTTP error response: {}", e)
+                            .compat()
+                            .into()
+                    })
+            }
             ErrorKind::Crit(e) => Err(e),
         }
     }

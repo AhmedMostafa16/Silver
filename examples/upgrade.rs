@@ -33,12 +33,11 @@ fn handshake(_cx: &Context) -> Result<Upgrade, Error> {
     Ok(Upgrade::builder("lines").finish(handler))
 }
 
-fn main() -> silver_rs::app::Result<()> {
+fn main() -> silver_rs::AppResult<()> {
     pretty_env_logger::init();
     let app = App::builder()
         .mount("/", vec![Route::new("/", Method::GET, handshake)])
         .finish()?;
 
-    silver_rs::server::run(app)?;
-    Ok(())
+    silver_rs::run(app)
 }

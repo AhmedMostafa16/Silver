@@ -37,9 +37,11 @@ impl Context {
         self.request.headers().get(H::header_name()).map_or_else(
             || Ok(None),
             |h| {
-                H::parse_header(&h.as_bytes().into())
-                    .map(Some)
-                    .map_err(|e| Error::new(e, StatusCode::BAD_REQUEST))
+                H::parse_header(&h.as_bytes().into()).map(Some).map_err(
+                    |e| {
+                        Error::new(e, StatusCode::BAD_REQUEST)
+                    },
+                )
             },
         )
     }

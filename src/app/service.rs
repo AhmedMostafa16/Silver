@@ -16,6 +16,15 @@ use upgrade::service as upgrade;
 
 use super::App;
 
+impl App {
+    pub fn new_service(&self) -> AppService {
+        AppService {
+            router: self.router.clone(),
+            rx: upgrade::new(),
+        }
+    }
+}
+
 impl NewService for App {
     type ReqBody = Body;
     type ResBody = Body;
@@ -25,10 +34,7 @@ impl NewService for App {
     type Future = future::FutureResult<Self::Service, Self::InitError>;
 
     fn new_service(&self) -> Self::Future {
-        future::ok(AppService {
-            router: self.router.clone(),
-            rx: upgrade::new(),
-        })
+        future::ok(self.new_service())
     }
 }
 
@@ -95,28 +101,28 @@ impl Future for AppServiceFuture {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let in_flight = &mut self.in_flight;
         match {
-            let cx = self
-                .context
-                .as_ref()
-                .expect("AppServiceFuture has already resolved/rejected");
+            let cx = self.context.as_ref().expect(
+                "AppServiceFuture has already resolved/rejected",
+            );
             cx.set(|| in_flight.poll())
         } {
             Ok(Async::Ready(out)) => {
                 let (response, handler) = out.deconstruct();
                 if let Some(handler) = handler {
                     debug_assert_eq!(response.status(), StatusCode::SWITCHING_PROTOCOLS);
-                    let cx = self
-                        .context
-                        .take()
-                        .expect("AppServiceFuture has already resolved/rejected");
+                    let cx = self.context.take().expect(
+                        "AppServiceFuture has already resolved/rejected",
+                    );
                     self.tx.send(handler, cx.request.map(|bd| drop(bd)));
                 }
                 Ok(Async::Ready(response))
             }
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(e) => e
-                .into_response()
-                .map(|res| res.map(ResponseBody::into_hyp).into()),
+            Err(e) => {
+                e.into_response().map(|res| {
+                    res.map(ResponseBody::into_hyp).into()
+                })
+            }
         }
     }
 }

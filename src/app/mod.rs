@@ -1,11 +1,9 @@
-pub(crate) mod service;
+pub mod service;
 
 use failure::Error;
 use std::sync::Arc;
 
 use router::{self, Route, Router};
-
-pub type Result<T> = ::std::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub struct App {
@@ -14,11 +12,8 @@ pub struct App {
 
 impl App {
     pub fn builder() -> AppBuilder {
-        AppBuilder {
-            router: Router::builder(),
-        }
+        AppBuilder { router: Router::builder() }
     }
-
 }
 
 #[derive(Debug)]
@@ -37,10 +32,7 @@ impl AppBuilder {
         self
     }
 
-    pub fn finish(&mut self) -> Result<App> {
-        Ok(App {
-            router: self.router.finish().map(Arc::new)?,
-        })
+    pub fn finish(&mut self) -> Result<App, Error> {
+        Ok(App { router: self.router.finish().map(Arc::new)? })
     }
-
 }
