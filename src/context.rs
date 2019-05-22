@@ -3,9 +3,10 @@ use hyperx::header::Header;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use app::AppState;
 use error::Error;
 use input::RequestBody;
-use router::{Route, Router, RouterState};
+use router::{Route, RouterState};
 
 scoped_thread_local!(static CONTEXT: Context);
 
@@ -13,7 +14,7 @@ scoped_thread_local!(static CONTEXT: Context);
 pub struct Context {
     pub(crate) request: Request<RequestBody>,
     pub(crate) route: RouterState,
-    pub(crate) router: Arc<Router>,
+    pub(crate) state: Arc<AppState>,
 }
 
 impl Context {
@@ -37,18 +38,16 @@ impl Context {
         self.request.headers().get(H::header_name()).map_or_else(
             || Ok(None),
             |h| {
-                H::parse_header(&h.as_bytes().into()).map(Some).map_err(
-                    |e| {
-                        Error::new(e, StatusCode::BAD_REQUEST)
-                    },
-                )
+                H::parse_header(&h.as_bytes().into())
+                    .map(Some)
+                    .map_err(|e| Error::new(e, StatusCode::BAD_REQUEST))
             },
         )
     }
 
     pub fn route(&self) -> Option<&Route> {
         match self.route {
-            RouterState::Matched(i, ..) => self.router.get_route(i),
+            RouterState::Matched(i, ..) => self.state.router().get_route(i),
             _ => None,
         }
     }
