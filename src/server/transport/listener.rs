@@ -32,7 +32,7 @@ enum Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Config::Tcp { addr: ([127, 0, 0, 1], 4000).into() }
+        Config::Tcp { addr: ([127, 0, 0, 1], 8080).into() }
     }
 }
 

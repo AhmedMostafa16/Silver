@@ -42,7 +42,6 @@ fn load_key(path: &PathBuf) -> Result<PrivateKey, Error> {
     })?;
     if keys.is_empty() {
         bail!("Empty private key");
-
     }
     Ok(keys[0].clone())
 }
