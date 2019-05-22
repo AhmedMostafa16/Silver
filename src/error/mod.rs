@@ -43,9 +43,9 @@ impl Error {
     /// passed directly to the lower-level HTTP service.
     pub fn critical<E>(err: E) -> Error
     where
-        E: StdError + Send + Sync + 'static,
+        E: Into<Box<StdError + Send + Sync + 'static>>,
     {
-        Error { kind: ErrorKind::Crit(Box::new(err)) }
+        Error { kind: ErrorKind::Crit(err.into()) }
     }
 
     /// Returns `true` if this error is a *critical* error.
