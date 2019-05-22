@@ -1,4 +1,4 @@
-use http::{header, Request, StatusCode};
+use http::{Request, StatusCode};
 use hyperx::header::Header;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -8,16 +8,34 @@ use error::Error;
 use input::RequestBody;
 use router::{Route, RouterState};
 
+#[cfg(feature = "session")]
+use session::CookieManager;
+
+#[cfg(feature = "session")]
+pub use session::Cookies;
+
 scoped_thread_local!(static CONTEXT: Context);
 
 #[derive(Debug)]
 pub struct Context {
     pub(crate) request: Request<RequestBody>,
-    pub(crate) route: RouterState,
-    pub(crate) state: Arc<AppState>,
+    route: RouterState,
+    state: Arc<AppState>,
+    #[cfg(feature = "session")]
+    pub(crate) cookies: CookieManager,
 }
 
 impl Context {
+    pub(crate) fn new(request: Request<RequestBody>, state: Arc<AppState>) -> Context {
+        Context {
+            request: request,
+            route: RouterState::Uninitialized,
+            state: state,
+            #[cfg(feature = "session")]
+            cookies: Default::default(),
+        }
+    }
+
     pub(crate) fn set<R>(&self, f: impl FnOnce() -> R) -> R {
         CONTEXT.set(self, f)
     }
@@ -38,9 +56,11 @@ impl Context {
         self.request.headers().get(H::header_name()).map_or_else(
             || Ok(None),
             |h| {
-                H::parse_header(&h.as_bytes().into())
-                    .map(Some)
-                    .map_err(|e| Error::new(e, StatusCode::BAD_REQUEST))
+                H::parse_header(&h.as_bytes().into()).map(Some).map_err(
+                    |e| {
+                        Error::new(e, StatusCode::BAD_REQUEST)
+                    },
+                )
             },
         )
     }
@@ -52,6 +72,10 @@ impl Context {
         }
     }
 
+    pub(crate) fn set_route(&mut self, state: RouterState) {
+        self.route = state;
+    }
+
     pub fn params(&self) -> Option<Params> {
         match self.route {
             RouterState::Matched(_, ref params) => Some(Params {
@@ -60,6 +84,14 @@ impl Context {
             }),
             _ => None,
         }
+    }
+
+    #[cfg(feature = "session")]
+    pub fn cookies(&self) -> Result<Cookies, Error> {
+        if self.cookies.is_init() {
+            self.cookies.init(self.request.headers())?;
+        }
+        Ok(self.cookies.cookies(self.state.secret_key()))
     }
 }
 

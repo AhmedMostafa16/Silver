@@ -21,6 +21,7 @@ tokio-rustls = { version = "0.9", optional = true }
 fnv = "1.0"
 hyperx = "0.13"
 tokio-codec = "0.1"
+cookie = {version="0.12", features =["secure", "percent-encode"], optional = true}
 
 [target.'cfg(unix)'.dependencies]
 tokio-uds = "0.2"
@@ -30,5 +31,6 @@ pretty_env_logger = "0.3"
 tokio-io = "0.1"
 
 [features]
-default = ["tls"]
+default = ["tls","session"]
+session = ["cookie"]
 tls = ["rustls", "tokio-rustls"]
