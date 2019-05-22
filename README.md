@@ -14,6 +14,8 @@ Silver is a next generation Web framework for Rust.
 - Feature-rich.
 - Scalability.
 - Built-in router.
+- Built-in Cookies manager.
+- Custom error handling.
 - Asynchronous.
 - Clear syntax.
 
