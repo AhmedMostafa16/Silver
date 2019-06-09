@@ -1,6 +1,9 @@
 dist: xenial
 sudo: false
 language: rust
+os:
+  - linux
+  - osx
 
 cache:
   - apt: true
