@@ -53,6 +53,5 @@ impl ErrorHandler for DefaultErrorHandler {
                     .compat()
                     .into()
             })
-
     }
 }

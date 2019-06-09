@@ -121,9 +121,7 @@ impl Node {
                         return Ok(());
                     }
 
-                    n = &mut {
-                        n
-                    }.children[0];
+                    n = &mut { n }.children[0];
 
                     // Find the end position of wildcard segment.
                     let end = find_wildcard_end(path, offset)?;
@@ -143,10 +141,7 @@ impl Node {
                     // Check if a child with the next path byte exists
                     for pos in 0..n.children.len() {
                         if n.children[pos].path.as_bytes()[0] == c {
-                            n = &mut {
-                                n
-                            }.children
-                                [pos];
+                            n = &mut { n }.children[pos];
                             continue 'walk;
                         }
                     }
@@ -182,18 +177,13 @@ impl Node {
         'walk: while pos < path.len() {
             // Insert a wildcard node
             let i = find_wildcard_end(path, pos)?;
-            n = {
-                n
-            }.add_child(&path[pos..i])?;
+            n = { n }.add_child(&path[pos..i])?;
             pos = i;
 
             // Insert a normal node
             if pos < path.len() {
                 let i = find_wildcard_begin(path, pos);
-                n =
-                    {
-                        n
-                    }.add_child(&path[pos..i])?;
+                n = { n }.add_child(&path[pos..i])?;
                 pos = i;
             }
         }
@@ -229,10 +219,10 @@ impl Node {
                     n = &n.children[0];
                     match n.path.as_bytes()[0] {
                         b':' => {
-                            let span = path[offset..].bytes().position(|b| b == b'/').unwrap_or(
-                                path.len() -
-                                    offset,
-                            );
+                            let span = path[offset..]
+                                .bytes()
+                                .position(|b| b == b'/')
+                                .unwrap_or(path.len() - offset);
                             captures.push((offset, offset + span));
                             if span < path.len() - offset {
                                 if !n.children.is_empty() {
@@ -409,13 +399,11 @@ mod tests {
             Node {
                 path: "/foo".into(),
                 leaf: Some(0),
-                children: vec![
-                    Node {
-                        path: "bar".into(),
-                        leaf: Some(1),
-                        children: vec![],
-                    },
-                ],
+                children: vec![Node {
+                    path: "bar".into(),
+                    leaf: Some(1),
+                    children: vec![],
+                },],
             }
         );
 
@@ -425,13 +413,11 @@ mod tests {
             Node {
                 path: "/".into(),
                 leaf: None,
-                children: vec![
-                    Node {
-                        path: ":id".into(),
-                        leaf: Some(0),
-                        children: vec![],
-                    },
-                ],
+                children: vec![Node {
+                    path: ":id".into(),
+                    leaf: Some(0),
+                    children: vec![],
+                },],
             }
         );
 
@@ -447,37 +433,27 @@ mod tests {
             Node {
                 path: "/files".into(),
                 leaf: Some(0),
-                children: vec![
-                    Node {
-                        path: "/".into(),
-                        leaf: None,
-                        children: vec![
-                            Node {
-                                path: ":name".into(),
-                                leaf: Some(2),
-                                children: vec![
-                                    Node {
-                                        path: "/likes/".into(),
-                                        leaf: Some(1),
-                                        children: vec![
-                                            Node {
-                                                path: ":id".into(),
-                                                leaf: Some(4),
-                                                children: vec![
-                                                    Node {
-                                                        path: "/".into(),
-                                                        leaf: Some(3),
-                                                        children: vec![],
-                                                    },
-                                                ],
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
+                children: vec![Node {
+                    path: "/".into(),
+                    leaf: None,
+                    children: vec![Node {
+                        path: ":name".into(),
+                        leaf: Some(2),
+                        children: vec![Node {
+                            path: "/likes/".into(),
+                            leaf: Some(1),
+                            children: vec![Node {
+                                path: ":id".into(),
+                                leaf: Some(4),
+                                children: vec![Node {
+                                    path: "/".into(),
+                                    leaf: Some(3),
+                                    children: vec![],
+                                },],
+                            },],
+                        },],
+                    },],
+                },],
             }
         );
 
@@ -487,13 +463,11 @@ mod tests {
             Node {
                 path: "/".into(),
                 leaf: None,
-                children: vec![
-                    Node {
-                        path: "*path".into(),
-                        leaf: Some(0),
-                        children: vec![],
-                    },
-                ],
+                children: vec![Node {
+                    path: "*path".into(),
+                    leaf: Some(0),
+                    children: vec![],
+                },],
             }
         );
 
@@ -503,75 +477,61 @@ mod tests {
             Node {
                 path: "/files".into(),
                 leaf: Some(0),
-                children: vec![
-                    Node {
-                        path: "/".into(),
-                        leaf: None,
-                        children: vec![
-                            Node {
-                                path: "*path".into(),
-                                leaf: Some(1),
-                                children: vec![],
-                            },
-                        ],
-                    },
-                ],
+                children: vec![Node {
+                    path: "/".into(),
+                    leaf: None,
+                    children: vec![Node {
+                        path: "*path".into(),
+                        leaf: Some(1),
+                        children: vec![],
+                    },],
+                },],
             }
         );
 
         #[test]
         fn failcase1() {
-            assert!(
-                Recognizer::<()>::builder()
-                    .insert("/foo", ())
-                    .insert("/:id", ())
-                    .finish()
-                    .is_err()
-            );
+            assert!(Recognizer::<()>::builder()
+                .insert("/foo", ())
+                .insert("/:id", ())
+                .finish()
+                .is_err());
         }
 
         #[test]
         fn failcase2() {
-            assert!(
-                Recognizer::<()>::builder()
-                    .insert("/foo/", ())
-                    .insert("/foo/*path", ())
-                    .finish()
-                    .is_err()
-            );
+            assert!(Recognizer::<()>::builder()
+                .insert("/foo/", ())
+                .insert("/foo/*path", ())
+                .finish()
+                .is_err());
         }
 
         #[test]
         fn failcase3() {
-            assert!(
-                Recognizer::<()>::builder()
-                    .insert("/:id", ())
-                    .insert("/foo", ())
-                    .finish()
-                    .is_err()
-            );
+            assert!(Recognizer::<()>::builder()
+                .insert("/:id", ())
+                .insert("/foo", ())
+                .finish()
+                .is_err());
         }
 
         #[test]
         fn failcase4() {
-            assert!(
-                Recognizer::<()>::builder()
-                    .insert("/foo/*path", ())
-                    .insert("/foo/", ())
-                    .finish()
-                    .is_err()
-            );
+            assert!(Recognizer::<()>::builder()
+                .insert("/foo/*path", ())
+                .insert("/foo/", ())
+                .finish()
+                .is_err());
         }
 
         #[test]
         fn failcase5() {
-            assert!(
-                Recognizer::<()>::builder()
-                    .insert("/:id", ())
-                    .insert("/:name", ())
-                    .finish()
-                    .is_err()
-            );
+            assert!(Recognizer::<()>::builder()
+                .insert("/:id", ())
+                .insert("/:name", ())
+                .finish()
+                .is_err());
         }
     }
 

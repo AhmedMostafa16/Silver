@@ -13,10 +13,7 @@ pub struct Route {
     pub(super) path: String,
     method: Method,
     handler: Box<
-        Fn(&Context) -> Box<Future<Item = Output, Error = Error> + Send>
-            + Send
-            + Sync
-            + 'static,
+        Fn(&Context) -> Box<Future<Item = Output, Error = Error> + Send> + Send + Sync + 'static,
     >,
 }
 

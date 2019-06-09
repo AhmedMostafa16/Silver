@@ -55,7 +55,9 @@ impl RequestBody {
 
     /// Creates an instance of "ReadAll" from the raw message body.
     pub fn read_all(&self) -> ReadAll {
-        ReadAll { state: ReadAllState::Init(self.take_body()) }
+        ReadAll {
+            state: ReadAllState::Init(self.take_body()),
+        }
     }
 }
 
@@ -195,9 +197,8 @@ impl ReadAll {
     where
         T: FromData + Send,
     {
-        self.map_err(Error::critical).and_then(|body| {
-            Context::with(|cx| T::from_data(body, cx.request()))
-        })
+        self.map_err(Error::critical)
+            .and_then(|body| Context::with(|cx| T::from_data(body, cx.request())))
     }
 }
 

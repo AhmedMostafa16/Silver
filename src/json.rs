@@ -56,7 +56,6 @@ impl<T: DeserializeOwned + 'static> FromData for Json<T> {
     }
 }
 
-
 impl<T: Serialize> Responder for Json<T> {
     fn respond_to<U>(self, _: &Request<U>) -> Result<Output, Error> {
         let body = serde_json::to_vec(&self.0)?;

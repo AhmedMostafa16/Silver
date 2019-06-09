@@ -31,9 +31,10 @@ impl<'a> Cookies<'a> {
     }
 
     pub fn remove_private(&self, cookie: Cookie<'static>) {
-        self.jar.borrow_mut().private(self.secret_key).remove(
-            cookie,
-        )
+        self.jar
+            .borrow_mut()
+            .private(self.secret_key)
+            .remove(cookie)
     }
 }
 

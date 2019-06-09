@@ -1,13 +1,13 @@
-extern crate silver_rs;
 extern crate http;
+extern crate silver_rs;
 
 #[cfg(unix)]
-fn main()->silver_rs::AppResult<()>{
-    use silver_rs::server::Server;
-    use silver_rs::{App,Route};
+fn main() -> silver_rs::AppResult<()> {
     use http::Method;
+    use silver_rs::server::Server;
+    use silver_rs::{App, Route};
 
-        let sock_path: std::path::PathBuf = std::env::args()
+    let sock_path: std::path::PathBuf = std::env::args()
         .nth(1)
         .map(Into::into)
         .unwrap_or_else(|| "/tmp/silver_rs-uds.sock".into());
@@ -30,7 +30,7 @@ fn main()->silver_rs::AppResult<()>{
     println!();
     server.serve();
 
-    Ok(()) 
+    Ok(())
 }
 
 #[cfg(not(unix))]

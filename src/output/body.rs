@@ -48,7 +48,6 @@ impl_conversions![
     Chunk,
 ];
 
-
 impl ResponseBody {
     pub fn empty() -> ResponseBody {
         Default::default()

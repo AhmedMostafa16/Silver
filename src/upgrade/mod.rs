@@ -11,7 +11,7 @@ use std::{fmt, mem};
 
 use error::Error;
 use output::{Output, Responder, ResponseBody};
-use server::{Io, ServiceUpgradeExt};
+use server::Io;
 
 /// A "Responder" for constructing an upgrade response.
 pub struct Upgrade {

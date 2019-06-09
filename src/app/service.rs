@@ -108,17 +108,18 @@ impl Future for AppServiceFuture {
 impl AppServiceFuture {
     fn poll_in_flight(&mut self) -> Poll<Output, Error> {
         let in_flight = &mut self.in_flight;
-        let cx = self.context.as_ref().expect(
-            "AppServiceFuture has already resolved/rejected",
-        );
+        let cx = self
+            .context
+            .as_ref()
+            .expect("AppServiceFuture has already resolved/rejected");
 
         cx.set(|| in_flight.poll())
     }
 
     fn pop_context(&mut self) -> Context {
-        self.context.take().expect(
-            "AppServiceFuture has already resolved/rejected",
-        )
+        self.context
+            .take()
+            .expect("AppServiceFuture has already resolved/rejected")
     }
 
     fn handle_response(&mut self, output: Output) -> Response<Body> {
@@ -127,7 +128,8 @@ impl AppServiceFuture {
 
         // TODO: Apply middlewares
 
-        #[cfg(feature = "session")] cx.cookies.append_to(response.headers_mut());
+        #[cfg(feature = "session")]
+        cx.cookies.append_to(response.headers_mut());
 
         if let Some(handler) = handler {
             debug_assert_eq!(response.status(), StatusCode::SWITCHING_PROTOCOLS);

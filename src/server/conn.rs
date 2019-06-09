@@ -22,9 +22,7 @@ where
 
 impl<I, S> fmt::Debug for Connection<I, S>
 where
-    S: Service<ReqBody = Body, ResBody = Body>
-        + ServiceUpgradeExt<I>
-        + fmt::Debug,
+    S: Service<ReqBody = Body, ResBody = Body> + ServiceUpgradeExt<I> + fmt::Debug,
     I: AsyncRead + AsyncWrite + fmt::Debug,
     S::Upgrade: fmt::Debug,
 {
@@ -42,9 +40,7 @@ where
 impl<I, S> Future for Connection<I, S>
 where
     I: AsyncRead + AsyncWrite + 'static,
-    S: Service<ReqBody = Body, ResBody = Body>
-        + ServiceUpgradeExt<I>
-        + 'static,
+    S: Service<ReqBody = Body, ResBody = Body> + ServiceUpgradeExt<I> + 'static,
     S::Future: Send,
 {
     type Item = ();
@@ -112,7 +108,10 @@ where
                 trace!("construct a future and transit to Upgrade");
 
                 let Parts {
-                    service, io, read_buf, ..
+                    service,
+                    io,
+                    read_buf,
+                    ..
                 } = parts;
 
                 *self = match service.try_into_upgrade(io, read_buf) {

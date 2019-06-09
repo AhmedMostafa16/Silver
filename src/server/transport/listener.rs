@@ -25,14 +25,20 @@ fn map_async<T, E, U>(x: Poll<T, E>, f: impl FnOnce(T) -> U) -> Poll<U, E> {
 
 #[derive(Debug)]
 enum Config {
-    Tcp { addr: SocketAddr },
+    Tcp {
+        addr: SocketAddr,
+    },
     #[cfg(unix)]
-    Uds { path: PathBuf },
+    Uds {
+        path: PathBuf,
+    },
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Config::Tcp { addr: ([127, 0, 0, 1], 8080).into() }
+        Config::Tcp {
+            addr: ([127, 0, 0, 1], 8080).into(),
+        }
     }
 }
 
@@ -118,19 +124,13 @@ impl ListenerKind {
     #[cfg(feature = "tls")]
     fn poll_accept_tls(&mut self, session: ServerSession) -> Poll<Handshake, io::Error> {
         match *self {
-            ListenerKind::Tcp(ref mut l) => {
-                map_async(
-                    l.poll_accept(),
-                    |(s, _)| Handshake::tcp_with_tls(s, session),
-                )
-            }
+            ListenerKind::Tcp(ref mut l) => map_async(l.poll_accept(), |(s, _)| {
+                Handshake::tcp_with_tls(s, session)
+            }),
             #[cfg(unix)]
-            ListenerKind::Uds(ref mut l) => {
-                map_async(
-                    l.poll_accept(),
-                    |(s, _)| Handshake::uds_with_tls(s, session),
-                )
-            }
+            ListenerKind::Uds(ref mut l) => map_async(l.poll_accept(), |(s, _)| {
+                Handshake::uds_with_tls(s, session)
+            }),
         }
     }
 }
@@ -139,7 +139,8 @@ impl fmt::Debug for Listener {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut d = f.debug_struct("Listener");
         d.field("kind", &self.kind);
-        #[cfg(feature = "tls")] d.field("tls", &self.tls.as_ref().map(|_| "<TLS Config>"));
+        #[cfg(feature = "tls")]
+        d.field("tls", &self.tls.as_ref().map(|_| "<TLS Config>"));
         d.finish()
     }
 }
@@ -208,10 +209,7 @@ impl Handshake {
     #[cfg(feature = "tls")]
     fn tcp_with_tls(stream: TcpStream, session: ServerSession) -> Handshake {
         Handshake(HandshakeKind::Tcp(MaybeTlsHandshake::Tls(
-            tokio_rustls::TlsAcceptor::accept_with_session(
-                stream,
-                session,
-            ),
+            tokio_rustls::TlsAcceptor::accept_with_session(stream, session),
         )))
     }
 
@@ -224,10 +222,7 @@ impl Handshake {
     #[cfg(feature = "tls")]
     fn uds_with_tls(stream: UnixStream, session: ServerSession) -> Handshake {
         Handshake(HandshakeKind::Uds(MaybeTlsHandshake::Tls(
-            tokio_rustls::TlsAcceptor::accept_with_session(
-                stream,
-                session,
-            ),
+            tokio_rustls::TlsAcceptor::accept_with_session(stream, session),
         )))
     }
 }

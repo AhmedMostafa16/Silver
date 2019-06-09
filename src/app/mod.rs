@@ -108,13 +108,15 @@ impl AppBuilder {
 
         let state = AppState {
             router: builder.router.finish()?,
-            error_handler: builder.error_handler.unwrap_or_else(
-                || Box::new(DefaultErrorHandler::new()),
-            ),
+            error_handler: builder
+                .error_handler
+                .unwrap_or_else(|| Box::new(DefaultErrorHandler::new())),
             #[cfg(feature = "session")]
             secret_key: builder.secret_key.unwrap_or_else(Key::generate),
         };
 
-        Ok(App { state: Arc::new(state) })
+        Ok(App {
+            state: Arc::new(state),
+        })
     }
 }

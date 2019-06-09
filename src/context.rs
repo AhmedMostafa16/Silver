@@ -56,9 +56,9 @@ impl Context {
         self.request.headers().get(H::header_name()).map_or_else(
             || Ok(None),
             |h| {
-                H::parse_header(&h.as_bytes().into()).map(Some).map_err(
-                    Error::bad_request,
-                )
+                H::parse_header(&h.as_bytes().into())
+                    .map(Some)
+                    .map_err(Error::bad_request)
             },
         )
     }
@@ -87,9 +87,9 @@ impl Context {
     #[cfg(feature = "session")]
     pub fn cookies(&self) -> Result<Cookies, Error> {
         if self.cookies.is_init() {
-            self.cookies.init(self.request.headers()).map_err(
-                Error::internal_server_error,
-            )?;
+            self.cookies
+                .init(self.request.headers())
+                .map_err(Error::internal_server_error)?;
         }
         Ok(self.cookies.cookies(self.state.secret_key()))
     }

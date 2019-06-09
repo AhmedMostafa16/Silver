@@ -35,9 +35,8 @@ impl Receiver {
     pub fn poll_ready(&mut self) -> Poll<(), Error> {
         self.tx.take().map(|tx| drop(tx));
 
-        if let Some(upgrade) = try_ready!(
-            self.rx.poll().map_err(|_| format_err!("during rx.poll()"))
-        )
+        if let Some(upgrade) =
+            try_ready!(self.rx.poll().map_err(|_| format_err!("during rx.poll()")))
         {
             self.upgrade = Some(upgrade);
         }

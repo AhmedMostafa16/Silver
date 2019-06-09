@@ -147,20 +147,22 @@ where
             mut runtime,
         } = self;
 
-        let server = listener.incoming().map_err(|_| ()).for_each(
-            move |handshake| {
+        let server = listener
+            .incoming()
+            .map_err(|_| ())
+            .for_each(move |handshake| {
                 let protocol = protocol.clone();
                 let new_service = new_service.clone();
                 handshake.map_err(|_| ()).and_then(move |stream| {
-                    new_service.new_service().map_err(|_e| ()).and_then(
-                        move |service| {
+                    new_service
+                        .new_service()
+                        .map_err(|_e| ())
+                        .and_then(move |service| {
                             let conn = Connection::Http(protocol.serve_connection(stream, service));
                             tokio::spawn(conn)
-                        },
-                    )
+                        })
                 })
-            },
-        );
+            });
 
         runtime.spawn(server);
         runtime.shutdown_on_idle().wait().unwrap();

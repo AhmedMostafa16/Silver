@@ -42,15 +42,13 @@ impl Router {
         cx.set_route(RouterState::NotMatched);
 
         match self.recognizer.recognize(cx.request().uri().path()) {
-            Some((matched, params)) => {
-                match matched.get(cx.request().method()) {
-                    Some(&i) => {
-                        cx.set_route(RouterState::Matched(i, params));
-                        self.routes[i].handle(cx)
-                    }
-                    None => Box::new(future::err(Error::method_not_allowed())),
+            Some((matched, params)) => match matched.get(cx.request().method()) {
+                Some(&i) => {
+                    cx.set_route(RouterState::Matched(i, params));
+                    self.routes[i].handle(cx)
                 }
-            }
+                None => Box::new(future::err(Error::method_not_allowed())),
+            },
 
             None => Box::new(future::err(Error::not_found())),
         }

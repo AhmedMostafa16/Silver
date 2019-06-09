@@ -28,18 +28,16 @@ pub fn load_config(config: &TlsConfig) -> Result<ServerConfig, Error> {
 fn load_certs(path: &PathBuf) -> Result<Vec<Certificate>, Error> {
     let certfile = fs::File::open(path)?;
     let mut reader = io::BufReader::new(certfile);
-    let certs = pemfile::certs(&mut reader).map_err(|_| {
-        format_err!("Faild to read certificates.")
-    })?;
+    let certs =
+        pemfile::certs(&mut reader).map_err(|_| format_err!("Faild to read certificates."))?;
     Ok(certs)
 }
 
 fn load_key(path: &PathBuf) -> Result<PrivateKey, Error> {
     let keyfile = fs::File::open(path)?;
     let mut reader = io::BufReader::new(keyfile);
-    let keys = pemfile::pkcs8_private_keys(&mut reader).map_err(|_| {
-        format_err!("Faild to read private keys.")
-    })?;
+    let keys = pemfile::pkcs8_private_keys(&mut reader)
+        .map_err(|_| format_err!("Faild to read private keys."))?;
     if keys.is_empty() {
         bail!("Empty private key");
     }
