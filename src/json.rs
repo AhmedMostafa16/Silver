@@ -7,7 +7,8 @@ use serde::ser::Serialize;
 use serde_json;
 use std::ops::Deref;
 
-use error::Error;
+use error::handler::ErrorHandler;
+use error::{CritError, Error, HttpError};
 use input::body::FromData;
 use output::{Output, Responder, ResponseBody};
 
@@ -37,9 +38,11 @@ impl<T> Deref for Json<T> {
 impl<T: DeserializeOwned + 'static> FromData for Json<T> {
     fn from_data<U>(data: Bytes, request: &Request<U>) -> Result<Json<T>, Error> {
         if let Some(h) = request.headers().get(header::CONTENT_TYPE) {
-            let mime: Mime = h.to_str().map_err(Error::bad_request)?.parse().map_err(
-                Error::bad_request,
-            )?;
+            let mime: Mime = h
+                .to_str()
+                .map_err(Error::bad_request)?
+                .parse()
+                .map_err(Error::bad_request)?;
             if mime != mime::APPLICATION_JSON {
                 return Err(Error::bad_request(format_err!(
                     "The value of Content-type is not equal to application/json"
@@ -52,7 +55,6 @@ impl<T: DeserializeOwned + 'static> FromData for Json<T> {
             .map(Json)
     }
 }
-
 
 
 impl<T: Serialize> Responder for Json<T> {
@@ -74,6 +76,38 @@ impl From<serde_json::Value> for JsonValue {
 impl Responder for JsonValue {
     fn respond_to<T>(self, _: &Request<T>) -> Result<Output, Error> {
         Ok(json_response(self.0.to_string()))
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct JsonErrorHandler {
+    _priv: (),
+}
+
+impl JsonErrorHandler {
+    pub fn new() -> JsonErrorHandler {
+        Default::default()
+    }
+}
+
+impl ErrorHandler for JsonErrorHandler {
+    fn handle_error(
+        &self,
+        e: &HttpError,
+        _: &Request<()>,
+    ) -> Result<Response<ResponseBody>, CritError> {
+        let body = json!({
+            "code": e.status_code().as_u16(),
+            "description": e.to_string(),
+        })
+        .to_string();
+
+        Response::builder()
+            .status(e.status_code())
+            .header(header::CONNECTION, "close")
+            .header(header::CACHE_CONTROL, "no-cache")
+            .body(body.into())
+            .map_err(Into::into)
     }
 }
 

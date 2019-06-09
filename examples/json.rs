@@ -10,7 +10,7 @@ extern crate pretty_env_logger;
 extern crate log;
 
 use futures::prelude::*;
-use silver_rs::json::Json;
+use silver_rs::json::{Json,JsonErrorHandler};
 use silver_rs::{App, Context,Route,Error};
 use http::Method;
 
@@ -42,6 +42,8 @@ fn main()-> silver_rs::AppResult<()>{
     let app = App::builder()        .mount("/", vec![
             Route::new("/", Method::GET, get_json),
             Route::new("/", Method::POST, read_json_payload),
-        ]).finish()?;
+        ])
+        .error_handler(JsonErrorHandler::new())
+        .finish()?;
     silver_rs::run(app)
 }
