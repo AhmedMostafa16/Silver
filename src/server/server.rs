@@ -13,7 +13,6 @@ use super::conn::Connection;
 use super::service::ServiceUpgradeExt;
 use super::transport::{self, Io, Listener};
 
-
 // >>>>> Server <<<<< //
 
 /// A builder for constructing a `Server`.

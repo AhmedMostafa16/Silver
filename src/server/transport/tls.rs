@@ -1,6 +1,6 @@
 use failure::Error;
 use rustls::internal::pemfile;
-use rustls::{Certificate, PrivateKey,ServerConfig};
+use rustls::{Certificate, PrivateKey, ServerConfig};
 use std::path::PathBuf;
 use std::{fs, io};
 

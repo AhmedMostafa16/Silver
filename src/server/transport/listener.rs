@@ -60,7 +60,7 @@ impl Builder {
         self.config = Config::Tcp { addr: addr.into() };
         self
     }
-    
+
     /// Configures to use a Unix domain listener that will bind to the given path.
     ///
     /// NOTE: This method is enabled only on Unix platform.
@@ -72,7 +72,7 @@ impl Builder {
         self.config = Config::Uds { path: path.into() };
         self
     }
-    
+
     /// Configures to use TLS encryption with given configuration.
     ///
     /// NOTE: This method is enabled only if the feature `tls` is enabled.
@@ -166,7 +166,7 @@ impl Listener {
 
     /// Attempts to accept a TCP or UDS connection in an asynchronous manner.
     pub fn poll_accept(&mut self) -> Poll<Handshake, io::Error> {
-         self.poll_accept_inner()
+        self.poll_accept_inner()
     }
 
     /// Creates an instance of `Incoming` from this value.
@@ -189,7 +189,6 @@ impl Listener {
             None => self.kind.poll_accept_raw(),
         }
     }
-
 }
 
 // >>>>> Incoming <<<<< //
