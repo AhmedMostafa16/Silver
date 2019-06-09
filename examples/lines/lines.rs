@@ -18,7 +18,8 @@ where
     F: Fn(String) -> Option<String> + Send + Sync + 'static,
 {
     // Validate the header Connection.
-    let h = cx.headers()
+    let h = cx
+        .headers()
         .get(header::CONNECTION)
         .ok_or_else(|| missing_header("Connection"))?;
     if h.as_bytes() != b"Upgrade" {

@@ -1,5 +1,5 @@
 dist: xenial
-sudo: required
+sudo: false
 language: rust
 
 cache:
@@ -9,23 +9,9 @@ cache:
   - directories:
     - doc/target
 
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      
-
 branches:
   only:
     - master
-
-before_install:
-  - sudo apt-get update
 
 matrix:
   allow_failures:
@@ -37,38 +23,16 @@ matrix:
         apt:
           packages:
             - libssl-dev
-            - libcurl4-openssl-dev
-            - libelf-dev
-            - libdw-dev
-            - cmake
-            - gcc
-            - binutils-dev
       before_script:
-        - rustup component add rustfmt-preview
+        - rustup component add rustfmt
       script:
         - cargo clean
         - cargo test
       after_success:
-        - rustfmt src/* -f --write-mode overwrite
+        - cargo fmt --all
         - bash <(curl https://raw.githubusercontent.com/xd009642/tarpaulin/master/travis-install.sh)
         - USE_SKEPTIC=1 cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID 
-        - |
-          if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
-            wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-            tar xzf master.tar.gz &&
-            cd kcov-master &&
-            mkdir build &&
-            cd build &&
-            cmake .. &&
-            make &&
-            sudo make install &&
-            cd ../.. &&
-            rm -rf kcov-master &&
-            for file in target/debug/examplerust-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-            bash <(curl -s https://codecov.io/bash) &&
-            echo "Uploaded code coverage"
-          fi
-          
+        
     - rust: beta
       before_script:
         - rustup component add rustfmt-preview

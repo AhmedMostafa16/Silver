@@ -9,23 +9,23 @@ Silver is a next generation Web framework for Rust.
 
 ## Features
 
-- Ultra-fast.
-- Thread-safety.
-- Feature-rich.
-- Scalability.
-- Built-in router.
-- Built-in Cookies manager.
-- Custom error handling.
-- Asynchronous.
-- Clear syntax.
+  - Ultra-fast.
+  - Thread-safety.
+  - Feature-rich.
+  - Scalability.
+  - Built-in router.
+  - Built-in Cookies manager.
+  - Custom error handling.
+  - Asynchronous.
+  - Clear syntax.
 
-    and more...
+      and more...
 
 
 #
 ## Usage
 
-Add the following to your Cargo.toml:
+Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -90,16 +90,16 @@ The benchmark results have been computed with this command:
 Running 10s test @ http://127.0.0.1:8080
   16 threads and 500 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.35ms    1.63ms  48.13ms   80.40%
-    Req/Sec    13.12k     1.26k   32.13k    80.26%
+    Latency     2.86ms    5.83ms 217.09ms   95.70%
+    Req/Sec    14.17k     2.27k   32.40k    74.77%
   Latency Distribution
-     50%    2.06ms
-     75%    2.85ms
-     90%    4.05ms
-     99%    8.25ms
-  2093569 requests in 10.09s, 241.59MB read
-Requests/sec: 207403.80
-Transfer/sec:     23.93MB
+     50%    1.70ms
+     75%    3.08ms
+     90%    5.52ms
+     99%   18.80ms
+  2261180 requests in 10.08s, 278.18MB read
+Requests/sec: 224312.89
+Transfer/sec:     27.60MB
 ```
 
 **Iron**
