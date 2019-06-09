@@ -57,8 +57,7 @@ impl Receiver {
                     request: request,
                     _priv: (),
                 };
-                let mut upgraded = upgrade.upgrade(cx);
-                Ok(Box::new(upgraded))
+                Ok(Box::new(upgrade.upgrade(cx)))
             }
 
             None => Err((io)),
