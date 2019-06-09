@@ -1,0 +1,11 @@
+#!/bin/bash
+
+DIR="$(cd $(dirname $BASH_SOURCE); pwd)"
+
+set -ex
+
+cargo tarpaulin --verbose --out Xml --all
+bash <(curl -s https://codecov.io/bash)
+
+cargo tarpaulin --verbose --packages silver_rs --all-features
+bash <(curl -s https://codecov.io/bash)
